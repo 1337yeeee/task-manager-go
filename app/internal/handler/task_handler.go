@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"task-manager/internal/auth"
 	"task-manager/internal/responses"
 	"task-manager/internal/service"
 )
@@ -66,7 +67,13 @@ func (h TaskHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	task, err := h.taskService.Create(ctx, project.ID, req.Name, req.Content)
+	identity := auth.FromContext(ctx.Request.Context())
+	if identity == nil {
+		responses.Unauthorized(ctx)
+		return
+	}
+
+	task, err := h.taskService.Create(ctx, identity, project.ID, req.Name, req.Content)
 	if err != nil {
 		log.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in create"})
@@ -94,7 +101,13 @@ func (h TaskHandler) Update(ctx *gin.Context) {
 		return
 	}
 
-	err := h.taskService.Update(ctx, req.ID, req.Name, req.Content, req.ExecutiveId, req.AuditorId)
+	identity := auth.FromContext(ctx.Request.Context())
+	if identity == nil {
+		responses.Unauthorized(ctx)
+		return
+	}
+
+	err := h.taskService.Update(ctx, identity, req.ID, req.Name, req.Content, req.ExecutiveId, req.AuditorId)
 	if err != nil {
 		log.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in update"})
@@ -106,7 +119,13 @@ func (h TaskHandler) UpdateStatus(ctx *gin.Context) {
 	id := ctx.Param("id")
 	status := ctx.Param("status")
 
-	err := h.taskService.UpdateStatus(ctx, id, status)
+	identity := auth.FromContext(ctx.Request.Context())
+	if identity == nil {
+		responses.Unauthorized(ctx)
+		return
+	}
+
+	err := h.taskService.UpdateStatus(ctx, identity, id, status)
 	if err != nil {
 		log.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in update"})

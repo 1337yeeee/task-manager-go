@@ -12,3 +12,7 @@ func InvalidCredentials(ctx *gin.Context) {
 func NotFound(ctx *gin.Context) {
 	ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 }
+
+func Unauthorized(ctx *gin.Context) {
+	ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+}

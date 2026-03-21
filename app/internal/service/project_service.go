@@ -2,19 +2,18 @@ package service
 
 import (
 	"context"
-	"log"
 	"task-manager/internal/auth"
 	"task-manager/internal/domain/models"
 	"task-manager/internal/domain/repository"
-	"task-manager/internal/myerrors"
+	"task-manager/internal/utils"
 	"time"
 )
 
 type ProjectService interface {
 	GetAll(ctx context.Context) ([]models.Project, error)
-	Create(ctx context.Context, name string, desc string) (*models.Project, error)
+	Create(ctx context.Context, identity *auth.Identity, name string, desc string) (*models.Project, error)
 	GetByID(ctx context.Context, id string) (*models.Project, error)
-	Update(ctx context.Context, id string, name *string, desc *string) (*models.Project, error)
+	Update(ctx context.Context, identity *auth.Identity, id string, name *string, desc *string) (*models.Project, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -27,25 +26,20 @@ func NewProjectService(repo repository.ProjectRepository) ProjectService {
 }
 
 func (s projectService) GetAll(ctx context.Context) ([]models.Project, error) {
-	projects, err := s.GetAll(ctx)
+	projects, err := s.repo.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return projects, nil
 }
 
-func (s projectService) Create(ctx context.Context, name string, desc string) (*models.Project, error) {
+func (s projectService) Create(ctx context.Context, identity *auth.Identity, name string, desc string) (*models.Project, error) {
 	project := models.Project{
 		Name: name,
 		Desc: desc,
 	}
 
-	identity := auth.IdentityFromContext(ctx)
-	if identity == nil {
-		log.Println("identity not found in context")
-		return nil, myerrors.IdentityNotFoundInContext()
-	}
-
+	project.ID = utils.NewUUID()
 	project.CreatedBy = identity.UserID
 	project.UpdatedBy = identity.UserID
 	project.CreatedAt = time.Now()
@@ -66,7 +60,7 @@ func (s projectService) GetByID(ctx context.Context, id string) (*models.Project
 	return project, nil
 }
 
-func (s projectService) Update(ctx context.Context, id string, name *string, desc *string) (*models.Project, error) {
+func (s projectService) Update(ctx context.Context, identity *auth.Identity, id string, name *string, desc *string) (*models.Project, error) {
 	project, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -85,12 +79,6 @@ func (s projectService) Update(ctx context.Context, id string, name *string, des
 	}
 
 	if changed {
-		identity := auth.IdentityFromContext(ctx)
-		if identity == nil {
-			log.Println("identity not found in context")
-			return nil, myerrors.IdentityNotFoundInContext()
-		}
-
 		project.UpdatedBy = identity.UserID
 		project.UpdatedAt = time.Now()
 		err = s.repo.Update(ctx, project)
@@ -102,5 +90,10 @@ func (s projectService) Update(ctx context.Context, id string, name *string, des
 }
 
 func (s projectService) Delete(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+	project, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.Delete(ctx, project)
 }

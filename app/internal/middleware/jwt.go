@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"strings"
+	"task-manager/internal/myerrors"
 
 	"github.com/gin-gonic/gin"
 
@@ -13,26 +13,11 @@ import (
 
 func JWTAuthMiddleware(tokenManager *utils.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		header := c.GetHeader("Authorization")
-		if header == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "missing authorization header",
-			})
+		tokenStr, err := extractToken(c)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
-
-		parts := strings.Split(header, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid authorization header",
-			})
-			return
-		}
-
-		tokenStr := parts[1]
-
-		log.Println("tokenStr:", tokenStr)
 
 		claims, err := tokenManager.Parse(tokenStr)
 		if err != nil {
@@ -42,16 +27,25 @@ func JWTAuthMiddleware(tokenManager *utils.TokenManager) gin.HandlerFunc {
 			return
 		}
 
-		log.Println(claims)
-
 		identity := auth.NewIdentity(claims.UserID, claims.Role)
 
-		log.Println(identity)
-
-		ctx := c.Request.Context()
-		ctx = auth.WithIdentity(ctx, identity)
+		ctx := auth.WithIdentity(c.Request.Context(), identity)
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
 	}
+}
+
+func extractToken(c *gin.Context) (string, error) {
+	header := c.GetHeader("Authorization")
+	if header == "" {
+		return "", myerrors.MissingAuthorizationHeader()
+	}
+
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return "", myerrors.InvalidAuthorizationHeader()
+	}
+
+	return parts[1], nil
 }

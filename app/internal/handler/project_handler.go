@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"task-manager/internal/auth"
+	"task-manager/internal/responses"
 	"task-manager/internal/service"
 )
 
@@ -45,7 +47,13 @@ func (h *ProjectHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	project, err := h.service.Create(ctx, req.Name, req.Desc)
+	identity := auth.FromContext(ctx.Request.Context())
+	if identity == nil {
+		responses.Unauthorized(ctx)
+		return
+	}
+
+	project, err := h.service.Create(ctx, identity, req.Name, req.Desc)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in create"})
 		log.Println(err)
@@ -72,7 +80,13 @@ func (h *ProjectHandler) Update(ctx *gin.Context) {
 		return
 	}
 
-	project, err := h.service.Update(ctx, req.ID, req.Name, req.Desc)
+	identity := auth.FromContext(ctx.Request.Context())
+	if identity == nil {
+		responses.Unauthorized(ctx)
+		return
+	}
+
+	project, err := h.service.Update(ctx, identity, req.ID, req.Name, req.Desc)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in update"})
 		log.Println(err)

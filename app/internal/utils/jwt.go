@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -53,8 +52,6 @@ func (m *TokenManager) generate(userID string, role auth.UserRole, ttl time.Dura
 			IssuedAt:  jwt.NewNumericDate(now),
 		},
 	}
-
-	log.Println(claims)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 

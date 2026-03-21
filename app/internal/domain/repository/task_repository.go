@@ -7,7 +7,7 @@ import (
 )
 
 type TaskRepository interface {
-	GetByProject(ctx context.Context, project models.Project) ([]models.Task, error)
+	GetByProject(ctx context.Context, project *models.Project) ([]models.Task, error)
 	Create(ctx context.Context, task *models.Task) error
 	GetByID(ctx context.Context, id string) (*models.Task, error)
 	Update(ctx context.Context, task *models.Task) error
@@ -22,7 +22,7 @@ func NewTaskRepository(db *gorm.DB) TaskRepository {
 	return taskRepository{db: db}
 }
 
-func (r taskRepository) GetByProject(ctx context.Context, project models.Project) ([]models.Task, error) {
+func (r taskRepository) GetByProject(ctx context.Context, project *models.Project) ([]models.Task, error) {
 	var tasks []models.Task
 	return tasks, r.db.WithContext(ctx).Find(&tasks).Where("project_id = ?", project.ID).Error
 }

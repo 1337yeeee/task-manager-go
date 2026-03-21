@@ -18,7 +18,7 @@ func NewIdentity(userID string, role UserRole) *Identity {
 	}
 }
 
-func IdentityFromContext(ctx context.Context) *Identity {
+func FromContext(ctx context.Context) *Identity {
 	identity := ctx.Value(identityKey)
 	return identity.(*Identity)
 }

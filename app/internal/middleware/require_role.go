@@ -9,7 +9,7 @@ import (
 
 func RequireRole(role auth.UserRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		identity := auth.IdentityFromContext(c)
+		identity := auth.FromContext(c.Request.Context())
 		if identity == nil || identity.Role != role {
 			c.AbortWithStatus(http.StatusForbidden)
 		}
@@ -20,10 +20,11 @@ func RequireRole(role auth.UserRole) gin.HandlerFunc {
 
 func RequireRolesModerators() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		roles := []auth.UserRole{auth.UserRoleAdmin, auth.UserRoleAdmin}
-		identity := auth.IdentityFromContext(c)
+		roles := []auth.UserRole{auth.UserRoleAdmin, auth.UserRoleEditor}
+		identity := auth.FromContext(c.Request.Context())
 		if identity == nil || !slices.Contains(roles, identity.Role) {
 			c.AbortWithStatus(http.StatusForbidden)
+			return
 		}
 
 	}

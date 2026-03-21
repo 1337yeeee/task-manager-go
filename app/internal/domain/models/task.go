@@ -36,6 +36,10 @@ func (s TaskStatus) IsValid() bool {
 	return false
 }
 
+func (s TaskStatus) String() string {
+	return string(s)
+}
+
 func ParseTaskStatus(s string) *TaskStatus {
 	status := TaskStatus(s)
 	if !status.IsValid() {
