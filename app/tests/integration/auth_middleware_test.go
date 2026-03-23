@@ -13,20 +13,7 @@ import (
 
 	"task-manager/internal/auth"
 	"task-manager/internal/middleware"
-	"task-manager/internal/utils"
 )
-
-func setupAuthTest() (*gin.Engine, *utils.TokenManager, *auth.Identity) {
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-
-	tokenManager := utils.NewTokenManager("test-secret", utils.DefaultAccessTTL, utils.DefaultRefreshTTL)
-
-	// Создаем тестовую identity
-	identity := auth.NewIdentity("test-user-id", auth.UserRoleViewer)
-
-	return r, tokenManager, identity
-}
 
 // Тест 1: Успешная аутентификация с валидным токеном
 func TestJWTAuthMiddleware_Success(t *testing.T) {
@@ -37,7 +24,7 @@ func TestJWTAuthMiddleware_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// Защищенный эндпоинт
-	r.GET("/protected", middleware.JWTAuthMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
 		ctxIdentity := auth.FromContext(c.Request.Context())
 		assert.NotNil(t, ctxIdentity)
 		assert.Equal(t, identity.UserID, ctxIdentity.UserID)
@@ -64,7 +51,7 @@ func TestJWTAuthMiddleware_Success(t *testing.T) {
 func TestJWTAuthMiddleware_MissingHeader(t *testing.T) {
 	r, tokenManager, _ := setupAuthTest()
 
-	r.GET("/protected", middleware.JWTAuthMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
@@ -86,7 +73,7 @@ func TestJWTAuthMiddleware_MissingHeader(t *testing.T) {
 func TestJWTAuthMiddleware_InvalidHeaderFormat(t *testing.T) {
 	r, tokenManager, _ := setupAuthTest()
 
-	r.GET("/protected", middleware.JWTAuthMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
@@ -108,7 +95,7 @@ func TestJWTAuthMiddleware_InvalidHeaderFormat(t *testing.T) {
 func TestJWTAuthMiddleware_InvalidToken(t *testing.T) {
 	r, tokenManager, _ := setupAuthTest()
 
-	r.GET("/protected", middleware.JWTAuthMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
@@ -123,7 +110,7 @@ func TestJWTAuthMiddleware_InvalidToken(t *testing.T) {
 	var response map[string]string
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "invalid token")
+	assert.Contains(t, response["error"], "invalid access token")
 }
 
 // Тест 5: Успешная авторизация с правильной ролью
@@ -136,7 +123,7 @@ func TestRequireRole_Success(t *testing.T) {
 
 	// Эндпоинт только для админов
 	r.GET("/admin",
-		middleware.JWTAuthMiddleware(tokenManager),
+		middleware.JWTAccessMiddleware(tokenManager),
 		middleware.RequireRole(auth.UserRoleAdmin),
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "admin access granted"})
@@ -162,7 +149,7 @@ func TestRequireRole_Fail(t *testing.T) {
 
 	// Эндпоинт только для админов
 	r.GET("/admin",
-		middleware.JWTAuthMiddleware(tokenManager),
+		middleware.JWTAccessMiddleware(tokenManager),
 		middleware.RequireRole(auth.UserRoleAdmin),
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "admin access granted"})
@@ -212,7 +199,7 @@ func TestRequireRolesModerators(t *testing.T) {
 
 			// Используем исправленную версию middleware
 			r.GET("/moderator-area",
-				middleware.JWTAuthMiddleware(tokenManager),
+				middleware.JWTAccessMiddleware(tokenManager),
 				middleware.RequireRolesModerators(), // используем исправленную версию
 				func(c *gin.Context) {
 					c.JSON(http.StatusOK, gin.H{"message": "access granted"})

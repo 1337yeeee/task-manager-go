@@ -17,10 +17,6 @@ func CouldNotCreateToken() CouldNotCreateTokenError {
 	return CouldNotCreateTokenError(errors.New("could not create token"))
 }
 
-func IdentityNotFoundInContext() IdentityNotFoundInContextError {
-	return IdentityNotFoundInContextError(errors.New("identity not found in context"))
-}
-
 func EntityNotFound(entity string) EntityNotFoundError {
 	return EntityNotFoundError(errors.New(entity + " not found"))
 }

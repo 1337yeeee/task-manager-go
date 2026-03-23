@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -37,7 +38,7 @@ func (s *Server) Run() error {
 
 	go func() {
 		log.Printf("server running on port %s", s.cfg.APIPort)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen error: %v", err)
 		}
 	}()

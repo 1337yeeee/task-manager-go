@@ -3,6 +3,8 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"task-manager/internal/auth"
+	"task-manager/internal/middleware"
 	"task-manager/internal/responses"
 	"task-manager/internal/service"
 )
@@ -39,4 +41,40 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		"refresh_token": refreshToken,
 		"token_type":    "Bearer",
 	})
+}
+
+func (h *AuthHandler) Refresh(ctx *gin.Context) {
+	identity := auth.FromContext(ctx.Request.Context())
+
+	tokenRaw, exists := ctx.Get(middleware.RefreshTokenContextKey)
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "missing refresh token"})
+		return
+	}
+
+	refreshToken := tokenRaw.(string)
+
+	access, refresh, err := h.service.RefreshToken(ctx, identity, refreshToken)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"access_token":  access,
+		"refresh_token": refresh,
+		"token_type":    "Bearer",
+	})
+}
+
+func (h *AuthHandler) Logout(ctx *gin.Context) {
+	identity := auth.FromContext(ctx.Request.Context())
+
+	err := h.service.Logout(ctx, identity)
+	if err != nil {
+		responses.InvalidCredentials(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{})
 }

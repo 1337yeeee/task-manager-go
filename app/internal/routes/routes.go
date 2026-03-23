@@ -22,9 +22,15 @@ func registerAuthRoutes(api *gin.RouterGroup, container *app.Container) {
 	authHandler := container.AuthHandler
 
 	auth := api.Group("/auth")
-	{
-		auth.POST("/login", authHandler.Login)
-	}
+	auth.POST("/login", authHandler.Login)
+
+	refresh := api
+	refresh.Use(middleware.JWTRefreshMiddleware(container.TokenManager))
+	refresh.POST("/refresh", authHandler.Refresh)
+
+	logout := api
+	logout.Use(middleware.JWTAccessMiddleware(container.TokenManager))
+	logout.Any("/logout", authHandler.Logout)
 }
 
 func registerProtectedRoutes(api *gin.RouterGroup, container *app.Container) {
@@ -33,7 +39,7 @@ func registerProtectedRoutes(api *gin.RouterGroup, container *app.Container) {
 	taskHandler := container.TaskHandler
 
 	protected := api.Group("")
-	protected.Use(middleware.JWTAuthMiddleware(container.TokenManager))
+	protected.Use(middleware.JWTAccessMiddleware(container.TokenManager))
 
 	// Users
 	users := protected.Group("/users")

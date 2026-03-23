@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"log"
 	"time"
@@ -22,7 +24,12 @@ func main() {
 		log.Fatalf("failed to connect database: %v", err)
 	}
 
-	container := app.NewContainer(cfg, db)
+	redisClient, err := WaitForRedis(cfg)
+	if err != nil {
+		log.Fatalf("failed to connect redis: %v", err)
+	}
+
+	container := app.NewContainer(cfg, db, redisClient)
 
 	srv := server.New(cfg, container)
 
@@ -42,6 +49,24 @@ func WaitForDB(cfg config.Config) (*gorm.DB, error) {
 		}
 
 		log.Println("waiting for database...")
+		time.Sleep(2 * time.Second)
+	}
+
+	return nil, err
+}
+
+func WaitForRedis(cfg config.Config) (*redis.Client, error) {
+	var client *redis.Client
+	var err error
+	ctx := context.Background()
+
+	for i := 0; i < 10; i++ {
+		client, err = database.NewRedis(ctx, cfg)
+		if err == nil {
+			return client, nil
+		}
+
+		log.Println("waiting for redis...")
 		time.Sleep(2 * time.Second)
 	}
 

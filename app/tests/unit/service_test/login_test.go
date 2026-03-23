@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"task-manager/internal/auth"
-	"task-manager/internal/config"
 	"task-manager/internal/domain/models"
 	"task-manager/internal/service"
 	"task-manager/internal/utils"
 )
 
 func TestAuthService_Login_Success(t *testing.T) {
-	repo := new(tests.MockUserRepository)
+	userRepo := new(tests.MockUserRepository)
+	authRepo := new(tests.MockAuthRepository)
 
 	password := "password123"
 	hash, _ := utils.HashPassword(password)
@@ -28,14 +28,15 @@ func TestAuthService_Login_Success(t *testing.T) {
 		Role:     auth.UserRole("admin"),
 	}
 
-	repo.On("FindUserByEmail", mock.Anything, user.Email).
+	userRepo.On("FindUserByEmail", mock.Anything, user.Email).
 		Return(user, nil)
 
-	cfg := config.Config{
-		JWTSecret: "secret",
-	}
+	authRepo.On("Store", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
 
-	authService := service.NewAuthService(repo, cfg)
+	tokenManager := utils.NewTokenManager("test-secret", utils.DefaultAccessTTL, utils.DefaultRefreshTTL)
+
+	authService := service.NewAuthService(userRepo, authRepo, tokenManager)
 
 	accessToken, refreshToken, err := authService.Login(
 		context.Background(),
@@ -47,11 +48,13 @@ func TestAuthService_Login_Success(t *testing.T) {
 	assert.NotEmpty(t, accessToken)
 	assert.NotEmpty(t, refreshToken)
 
-	repo.AssertExpectations(t)
+	userRepo.AssertExpectations(t)
+	authRepo.AssertExpectations(t)
 }
 
 func TestAuthService_Login_InvalidPassword(t *testing.T) {
-	repo := new(tests.MockUserRepository)
+	userRepo := new(tests.MockUserRepository)
+	authRepo := new(tests.MockAuthRepository)
 
 	hash, _ := utils.HashPassword("correct-password")
 
@@ -62,14 +65,12 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 		Role:     auth.UserRole("admin"),
 	}
 
-	repo.On("FindUserByEmail", mock.Anything, user.Email).
+	userRepo.On("FindUserByEmail", mock.Anything, user.Email).
 		Return(user, nil)
 
-	cfg := config.Config{
-		JWTSecret: "secret",
-	}
+	tokenManager := utils.NewTokenManager("test-secret", utils.DefaultAccessTTL, utils.DefaultRefreshTTL)
 
-	authService := service.NewAuthService(repo, cfg)
+	authService := service.NewAuthService(userRepo, authRepo, tokenManager)
 
 	accessToken, refreshToken, err := authService.Login(
 		context.Background(),
@@ -80,19 +81,21 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, accessToken)
 	assert.Empty(t, refreshToken)
+
+	userRepo.AssertExpectations(t)
+	authRepo.AssertExpectations(t)
 }
 
 func TestAuthService_Login_UserNotFound(t *testing.T) {
-	repo := new(tests.MockUserRepository)
+	userRepo := new(tests.MockUserRepository)
+	authRepo := new(tests.MockAuthRepository)
 
-	repo.On("FindUserByEmail", mock.Anything, "test@test.com").
+	userRepo.On("FindUserByEmail", mock.Anything, "test@test.com").
 		Return(&models.User{}, assert.AnError)
 
-	cfg := config.Config{
-		JWTSecret: "secret",
-	}
+	tokenManager := utils.NewTokenManager("test-secret", utils.DefaultAccessTTL, utils.DefaultRefreshTTL)
 
-	authService := service.NewAuthService(repo, cfg)
+	authService := service.NewAuthService(userRepo, authRepo, tokenManager)
 
 	accessToken, refreshToken, err := authService.Login(
 		context.Background(),
@@ -103,4 +106,7 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, accessToken)
 	assert.Empty(t, refreshToken)
+
+	userRepo.AssertExpectations(t)
+	authRepo.AssertExpectations(t)
 }

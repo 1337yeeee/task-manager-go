@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -26,27 +27,37 @@ func NewTokenManager(secret string, accessTTL, refreshTTL time.Duration) *TokenM
 	}
 }
 
+type TokenType string
+
+const (
+	TokenTypeAccess  TokenType = "access"
+	TokenTypeRefresh TokenType = "refresh"
+)
+
 type Claims struct {
 	UserID string
 	Role   auth.UserRole
+	Type   TokenType
 	jwt.RegisteredClaims
 }
 
 func (m *TokenManager) GenerateAccessToken(userID string, role auth.UserRole) (string, error) {
-	return m.generate(userID, role, m.accessTTL)
+	return m.generate(userID, role, TokenTypeAccess, m.accessTTL)
 }
 
 func (m *TokenManager) GenerateRefreshToken(userID string, role auth.UserRole) (string, error) {
-	return m.generate(userID, role, m.refreshTTL)
+	return m.generate(userID, role, TokenTypeRefresh, m.refreshTTL)
 }
 
-func (m *TokenManager) generate(userID string, role auth.UserRole, ttl time.Duration) (string, error) {
+func (m *TokenManager) generate(userID string, role auth.UserRole, tokenType TokenType, ttl time.Duration) (string, error) {
 	now := time.Now()
 
 	claims := Claims{
 		UserID: userID,
 		Role:   role,
+		Type:   tokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.NewString(),
 			Subject:   userID,
 			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(now),

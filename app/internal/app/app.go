@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"task-manager/internal/config"
 	"task-manager/internal/domain/repository"
@@ -17,6 +18,7 @@ type Container struct {
 	UserRepository    repository.UserRepository
 	ProjectRepository repository.ProjectRepository
 	TaskRepository    repository.TaskRepository
+	AuthRepository    repository.AuthRepository
 
 	AuthService    service.AuthService
 	UserService    service.UserService
@@ -29,7 +31,7 @@ type Container struct {
 	TaskHandler    *handler.TaskHandler
 }
 
-func NewContainer(cfg config.Config, db *gorm.DB) *Container {
+func NewContainer(cfg config.Config, db *gorm.DB, redis *redis.Client) *Container {
 	c := &Container{DB: db}
 
 	c.TokenManager = utils.NewTokenManager(
@@ -42,9 +44,10 @@ func NewContainer(cfg config.Config, db *gorm.DB) *Container {
 	c.UserRepository = repository.NewUserRepository(db)
 	c.ProjectRepository = repository.NewProjectRepository(db)
 	c.TaskRepository = repository.NewTaskRepository(db)
+	c.AuthRepository = repository.NewAuthRepository(redis)
 
 	// services
-	c.AuthService = service.NewAuthService(c.UserRepository, cfg)
+	c.AuthService = service.NewAuthService(c.UserRepository, c.AuthRepository, c.TokenManager)
 	c.UserService = service.NewUserService(c.UserRepository)
 	c.ProjectService = service.NewProjectService(c.ProjectRepository)
 	c.TaskService = service.NewTaskService(c.TaskRepository, c.ProjectService, c.UserService)
