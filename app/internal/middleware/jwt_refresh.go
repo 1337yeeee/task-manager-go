@@ -9,7 +9,7 @@ import (
 
 const RefreshTokenContextKey = "refreshToken"
 
-func JWTRefreshMiddleware(tokenManager *utils.TokenManager) gin.HandlerFunc {
+func JWTRefreshMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr, err := extractToken(c)
 		if err != nil {

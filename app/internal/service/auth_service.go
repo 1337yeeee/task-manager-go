@@ -19,10 +19,10 @@ type AuthService interface {
 type authService struct {
 	userRepository repository.UserRepository
 	authRepository repository.AuthRepository
-	tokenManager   *utils.TokenManager
+	tokenManager   utils.TokenManager
 }
 
-func NewAuthService(repo repository.UserRepository, authRepo repository.AuthRepository, tokenManager *utils.TokenManager) AuthService {
+func NewAuthService(repo repository.UserRepository, authRepo repository.AuthRepository, tokenManager utils.TokenManager) AuthService {
 	return &authService{
 		userRepository: repo,
 		authRepository: authRepo,

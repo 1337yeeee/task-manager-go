@@ -13,7 +13,7 @@ import (
 type Container struct {
 	DB *gorm.DB
 
-	TokenManager *utils.TokenManager
+	TokenManager utils.TokenManager
 
 	UserRepository    repository.UserRepository
 	ProjectRepository repository.ProjectRepository

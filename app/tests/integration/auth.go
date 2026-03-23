@@ -6,7 +6,7 @@ import (
 	"task-manager/internal/utils"
 )
 
-func setupAuthTest() (*gin.Engine, *utils.TokenManager, *auth.Identity) {
+func setupAuthTest() (*gin.Engine, utils.TokenManager, *auth.Identity) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 

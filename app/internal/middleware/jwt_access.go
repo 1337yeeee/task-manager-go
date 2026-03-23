@@ -11,7 +11,7 @@ import (
 	"task-manager/internal/utils"
 )
 
-func JWTAccessMiddleware(tokenManager *utils.TokenManager) gin.HandlerFunc {
+func JWTAccessMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr, err := extractToken(c)
 		if err != nil {

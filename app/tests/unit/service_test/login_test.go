@@ -110,3 +110,23 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 	userRepo.AssertExpectations(t)
 	authRepo.AssertExpectations(t)
 }
+
+func TestLogout_Success(t *testing.T) {
+	userRepoMock := &tests.MockUserRepository{}
+	authRepoMock := &tests.MockAuthRepository{}
+	tokenManagerMock := &tests.MockTokenManager{}
+
+	const UserID = "user-id"
+
+	authRepoMock.On("Delete", mock.Anything, UserID).Return(nil)
+
+	authService := service.NewAuthService(userRepoMock, authRepoMock, tokenManagerMock)
+
+	err := authService.Logout(context.Background(), &auth.Identity{UserID: UserID})
+
+	assert.NoError(t, err)
+
+	userRepoMock.AssertExpectations(t)
+	authRepoMock.AssertExpectations(t)
+	tokenManagerMock.AssertExpectations(t)
+}

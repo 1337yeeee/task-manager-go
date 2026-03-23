@@ -13,14 +13,20 @@ const (
 	DefaultRefreshTTL = 7 * 24 * time.Hour
 )
 
-type TokenManager struct {
+type TokenManager interface {
+	GenerateAccessToken(userID string, role auth.UserRole) (string, error)
+	GenerateRefreshToken(userID string, role auth.UserRole) (string, error)
+	Parse(tokenStr string) (*Claims, error)
+}
+
+type tokenManager struct {
 	secret     []byte
 	accessTTL  time.Duration
 	refreshTTL time.Duration
 }
 
-func NewTokenManager(secret string, accessTTL, refreshTTL time.Duration) *TokenManager {
-	return &TokenManager{
+func NewTokenManager(secret string, accessTTL, refreshTTL time.Duration) TokenManager {
+	return &tokenManager{
 		secret:     []byte(secret),
 		accessTTL:  accessTTL,
 		refreshTTL: refreshTTL,
@@ -41,15 +47,15 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func (m *TokenManager) GenerateAccessToken(userID string, role auth.UserRole) (string, error) {
+func (m *tokenManager) GenerateAccessToken(userID string, role auth.UserRole) (string, error) {
 	return m.generate(userID, role, TokenTypeAccess, m.accessTTL)
 }
 
-func (m *TokenManager) GenerateRefreshToken(userID string, role auth.UserRole) (string, error) {
+func (m *tokenManager) GenerateRefreshToken(userID string, role auth.UserRole) (string, error) {
 	return m.generate(userID, role, TokenTypeRefresh, m.refreshTTL)
 }
 
-func (m *TokenManager) generate(userID string, role auth.UserRole, tokenType TokenType, ttl time.Duration) (string, error) {
+func (m *tokenManager) generate(userID string, role auth.UserRole, tokenType TokenType, ttl time.Duration) (string, error) {
 	now := time.Now()
 
 	claims := Claims{
@@ -69,7 +75,7 @@ func (m *TokenManager) generate(userID string, role auth.UserRole, tokenType Tok
 	return token.SignedString(m.secret)
 }
 
-func (m *TokenManager) Parse(tokenStr string) (*Claims, error) {
+func (m *tokenManager) Parse(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenStr,
 		&Claims{},
