@@ -12,6 +12,7 @@ func SetupRouter(container *app.Container) *gin.Engine {
 
 	api := r.Group("/api")
 
+	registerSwaggerRoute(api)
 	registerAuthRoutes(api, container)
 	registerProtectedRoutes(api, container)
 

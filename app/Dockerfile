@@ -1,20 +1,12 @@
-FROM golang:1.25.0-alpine AS builder
+FROM golang:1.25.0-alpine
 
 WORKDIR /app
+
+RUN go install github.com/air-verse/air@latest
 
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
-
-RUN go build -o server ./cmd/server
-
-FROM alpine:3.19
-
-WORKDIR /app
-
-COPY --from=builder /app/server .
-
 EXPOSE 8080
 
-CMD ["./server"]
+CMD ["air", "-c", ".air.toml"]

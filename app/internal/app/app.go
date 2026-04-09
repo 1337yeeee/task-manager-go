@@ -56,7 +56,7 @@ func NewContainer(cfg config.Config, db *gorm.DB, redis *redis.Client) *Containe
 	c.AuthHandler = handler.NewAuthHandler(c.AuthService)
 	c.UserHandler = handler.NewUserHandler(c.UserService)
 	c.ProjectHandler = handler.NewProjectHandler(c.ProjectService)
-	c.TaskHandler = handler.NewTaskHandler(c.TaskService)
+	c.TaskHandler = handler.NewTaskHandler(c.TaskService, c.ProjectService)
 
 	return c
 }

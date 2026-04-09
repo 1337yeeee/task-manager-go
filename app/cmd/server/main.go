@@ -1,3 +1,13 @@
+// @title Task Manager API
+// @version 1.0
+// @description API for task manager
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 package main
 
 import (
@@ -11,6 +21,8 @@ import (
 	"task-manager/internal/config"
 	"task-manager/internal/database"
 	"task-manager/internal/server"
+
+	_ "task-manager/docs"
 )
 
 func main() {

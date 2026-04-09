@@ -1,0 +1,222 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f5f6fa;
+}
+
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+
+.sidebar {
+    width: 250px;
+    background: #1e1e2f;
+    color: white;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-footer .btn {
+    width: 100%;
+}
+
+.project-list {
+    list-style: none;
+}
+
+.project {
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.project:hover {
+    background: #2c2c44;
+}
+
+.project.active {
+    background: #3a3a5c;
+}
+
+/* Main */
+
+.main {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.desc-header {
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
+
+/* Board */
+
+.board {
+    display: flex;
+    gap: 16px;
+    height: 100%;
+}
+
+.column {
+    flex: 1;
+    background: #eaeaf0;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.column h3 {
+    margin-bottom: 10px;
+}
+
+.task-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Task */
+
+.task-card {
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    cursor: grab;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.task-title {
+    font-weight: bold;
+}
+
+.task-content {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.task-footer {
+    font-size: 12px;
+    color: gray;
+    display: flex;
+    justify-content: space-between;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Edit mode */
+
+.task-edit input,
+.task-edit textarea {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+/* Context menu */
+
+.context-menu {
+    position: absolute;
+    top: 30px;
+    right: 10px;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 6px;
+    width: 150px;
+    z-index: 10;
+}
+
+.context-menu select {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* Buttons */
+
+.btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn.primary {
+    background: #4a6cf7;
+    color: white;
+}
+
+.btn.save {
+    background: #2ecc71;
+    color: white;
+}
+
+/* Modal */
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Helpers */
+
+.hidden {
+    display: none;
+}
