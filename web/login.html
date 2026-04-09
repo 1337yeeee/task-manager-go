@@ -3,18 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard</title>
+    <title>Login</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+            color: #1f2937;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-form {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 32px 28px;
+            box-shadow:
+                    0 10px 25px rgba(0, 0, 0, 0.08),
+                    0 4px 10px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .login-form::before {
+            content: "Sign in";
+            display: block;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4px;
+            color: #111827;
+        }
+
+        .login-form::after {
+            content: "Enter your credentials to continue";
+            display: block;
+            order: -1;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            background: #f9fafb;
+        }
+
+        .login-form input:focus {
+            border-color: #4f46e5;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+        }
+
+        .login-form input::placeholder {
+            color: #9ca3af;
+        }
+
+        #loginBtn {
+            border: none;
+            border-radius: 10px;
+            padding: 14px 16px;
+            background: #4f46e5;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 8px 18px rgba(79, 70, 229, 0.22);
+        }
+
+        #loginBtn:hover {
+            background: #4338ca;
+        }
+
+        #loginBtn:active {
+            transform: translateY(1px);
+        }
+
+        #loginError {
+            min-height: 20px;
+            font-size: 14px;
+            color: #dc2626;
+            text-align: center;
+            margin-top: -4px;
+        }
+
+        @media (max-width: 480px) {
+            .login-form {
+                padding: 24px 20px;
+                border-radius: 14px;
+            }
+
+            .login-form::before {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="login-form">
-        <input id="email" type="email" placeholder="Email">
-        <input id="password" type="password" placeholder="Password" minlength="8">
-        <button id="loginBtn">Login</button>
-        <div id="loginError"></div>
-    </div>
+<div class="login-form">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password" minlength="8">
+    <button id="loginBtn">Login</button>
+    <div id="loginError"></div>
+</div>
 </body>
 
 <script src="js/auth.js"></script>
