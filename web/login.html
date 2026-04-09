@@ -10,29 +10,73 @@
 </head>
 <body>
     <div class="login-form">
-        <input id="email">
-        <input id="password" type="password">
+        <input id="email" type="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Password" minlength="8">
         <button id="loginBtn">Login</button>
+        <div id="loginError"></div>
     </div>
 </body>
 
+<script src="js/auth.js"></script>
 <script>
+    function validateLoginForm(email, password) {
+        const normalizedEmail = email.trim();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!normalizedEmail) {
+            return "Email is required";
+        }
+
+        if (!emailPattern.test(normalizedEmail)) {
+            return "Please enter a valid email address";
+        }
+
+        if (!password) {
+            return "Password is required";
+        }
+
+        if (password.length < 8) {
+            return "Password must be at least 8 characters long";
+        }
+
+        return "";
+    }
+
     $("#loginBtn").click(function () {
-        $.ajax({
-            url: API_URL + "/auth/login",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                email: $("#email").val(),
-                password: $("#password").val()
-            }),
-            success: function (res) {
-                localStorage.setItem("accessToken", res.accessToken);
-                window.location.href = "index.html";
-            }
-        });
+        $("#loginError").text("");
+
+        const email = $("#email").val();
+        const password = $("#password").val();
+        const validationError = validateLoginForm(email, password);
+
+        if (validationError) {
+            $("#loginError").text(validationError);
+            return;
+        }
+
+        login(email.trim(), password)
+            .done(function () {
+                window.location.replace("/");
+            })
+            .fail(function (jqXHR) {
+                const errorMessage = jqXHR.responseJSON && jqXHR.responseJSON.error
+                    ? jqXHR.responseJSON.error
+                    : "Login failed";
+
+                $("#loginError").text(errorMessage);
+            });
+    });
+
+    $("#password").on("keydown", function (event) {
+        if (event.key === "Enter") {
+            $("#loginBtn").trigger("click");
+        }
+    });
+
+    $("#email").on("keydown", function (event) {
+        if (event.key === "Enter") {
+            $("#loginBtn").trigger("click");
+        }
     });
 </script>
-
 </html>
-

@@ -8,10 +8,11 @@ import (
 )
 
 const RefreshTokenContextKey = "refreshToken"
+const RefreshTokenCookieName = "refresh_token"
 
 func JWTRefreshMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenStr, err := extractToken(c)
+		tokenStr, err := c.Cookie(RefreshTokenCookieName)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return

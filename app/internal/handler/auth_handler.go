@@ -7,6 +7,7 @@ import (
 	"task-manager/internal/middleware"
 	"task-manager/internal/responses"
 	"task-manager/internal/service"
+	"task-manager/internal/utils"
 )
 
 type AuthHandler struct {
@@ -25,9 +26,8 @@ type loginRequest struct {
 
 // TokenResponse represents auth tokens
 type TokenResponse struct {
-	AccessToken  string `json:"access_token" example:"jwt-access-token"`
-	RefreshToken string `json:"refresh_token" example:"jwt-refresh-token"`
-	TokenType    string `json:"token_type" example:"Bearer"`
+	AccessToken string `json:"access_token" example:"jwt-access-token"`
+	TokenType   string `json:"token_type" example:"Bearer"`
 }
 
 // ErrorResponse standard error response
@@ -60,16 +60,16 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.service.Login(ctx.Request.Context(), req.Email, req.Password)
+	access, refresh, err := h.service.Login(ctx.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		responses.InvalidCredentials(ctx)
 		return
 	}
 
+	h.setRefreshTokenCookie(ctx, refresh)
 	ctx.JSON(http.StatusOK, TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		TokenType:    "Bearer",
+		AccessToken: access,
+		TokenType:   "Bearer",
 	})
 }
 
@@ -100,10 +100,10 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 		return
 	}
 
+	h.setRefreshTokenCookie(ctx, refresh)
 	ctx.JSON(http.StatusOK, TokenResponse{
-		AccessToken:  access,
-		RefreshToken: refresh,
-		TokenType:    "Bearer",
+		AccessToken: access,
+		TokenType:   "Bearer",
 	})
 }
 
@@ -126,4 +126,16 @@ func (h *AuthHandler) Logout(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{})
+}
+
+func (h *AuthHandler) setRefreshTokenCookie(ctx *gin.Context, refreshToken string) {
+	ctx.SetCookie(
+		middleware.RefreshTokenCookieName,
+		refreshToken,
+		int(utils.DefaultRefreshTTL.Seconds()),
+		"/",
+		"SameSite",
+		false,
+		true,
+	)
 }

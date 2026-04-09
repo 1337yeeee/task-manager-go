@@ -13,7 +13,7 @@ import (
 
 func JWTAccessMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenStr, err := extractToken(c)
+		tokenStr, err := extractAccessToken(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
@@ -36,7 +36,7 @@ func JWTAccessMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 	}
 }
 
-func extractToken(c *gin.Context) (string, error) {
+func extractAccessToken(c *gin.Context) (string, error) {
 	header := c.GetHeader("Authorization")
 	if header == "" {
 		return "", myerrors.MissingAuthorizationHeader()

@@ -220,7 +220,7 @@ $("#profileBtn").click(function () {
 });
 
 $("#logoutBtn").click(function () {
-    alert("Logout (stub)");
+    logout();
 });
 
 /* =========================
