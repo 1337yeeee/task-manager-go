@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"task-manager/internal/myerrors"
@@ -13,9 +14,11 @@ import (
 
 func JWTAccessMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Println("JWTAccessMiddleware")
 		tokenStr, err := extractAccessToken(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			log.Println("extractAccessToken error", err)
 			return
 		}
 
@@ -24,6 +27,7 @@ func JWTAccessMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "invalid access token",
 			})
+			log.Println("invalid access token", err)
 			return
 		}
 

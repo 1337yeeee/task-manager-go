@@ -25,11 +25,11 @@ func registerAuthRoutes(api *gin.RouterGroup, container *app.Container) {
 	auth := api.Group("/auth")
 	auth.POST("/login", authHandler.Login)
 
-	refresh := api
+	refresh := api.Group("")
 	refresh.Use(middleware.JWTRefreshMiddleware(container.TokenManager))
 	refresh.POST("/refresh", authHandler.Refresh)
 
-	logout := api
+	logout := api.Group("")
 	logout.Use(middleware.JWTAccessMiddleware(container.TokenManager))
 	logout.Any("/logout", authHandler.Logout)
 }
@@ -46,17 +46,17 @@ func registerProtectedRoutes(api *gin.RouterGroup, container *app.Container) {
 	users := protected.Group("/users")
 	users.Use(middleware.RequireRole("admin"))
 	{
-		users.GET("/", userHandler.GetAll)
+		users.GET("", userHandler.GetAll)
 		users.GET("/:id", userHandler.GetByID)
 		users.PUT("/:id", userHandler.Update)
 		users.DELETE("/:id", userHandler.Delete)
-		users.POST("/", userHandler.Register)
+		users.POST("", userHandler.Register)
 	}
 
 	// Projects
 	projects := protected.Group("/projects")
 	{
-		projects.GET("/", projectHandler.GetAll)
+		projects.GET("", projectHandler.GetAll)
 		projects.GET("/:id", projectHandler.GetByID)
 		projects.GET("/:id/tasks", taskHandler.GetByProject)
 	}
@@ -64,7 +64,7 @@ func registerProtectedRoutes(api *gin.RouterGroup, container *app.Container) {
 	projectsModerators := protected.Group("/projects")
 	projectsModerators.Use(middleware.RequireRolesModerators())
 	{
-		projectsModerators.POST("/", projectHandler.Create)
+		projectsModerators.POST("", projectHandler.Create)
 		projectsModerators.PUT("/:id", projectHandler.Update)
 		projectsModerators.DELETE("/:id", projectHandler.Delete)
 		projectsModerators.POST("/:id/tasks", taskHandler.Create)

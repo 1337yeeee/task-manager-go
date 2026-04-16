@@ -67,6 +67,7 @@ type SuccessResponse struct {
 // @Failure 500 {object} ErrorResponse
 // @Router /projects/ [get]
 func (h *ProjectHandler) GetAll(ctx *gin.Context) {
+	log.Println("GetAll Projects")
 	projects, err := h.service.GetAll(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in getAll"})

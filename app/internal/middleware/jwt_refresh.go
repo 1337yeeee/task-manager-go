@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"task-manager/internal/auth"
 	"task-manager/internal/utils"
@@ -12,6 +13,7 @@ const RefreshTokenCookieName = "refresh_token"
 
 func JWTRefreshMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Println("JWTRefreshMiddleware")
 		tokenStr, err := c.Cookie(RefreshTokenCookieName)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})

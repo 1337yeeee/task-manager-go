@@ -52,7 +52,10 @@ func TestRefreshToken_Success(t *testing.T) {
 	r.POST("/refresh", authHandler.Refresh)
 
 	req, _ := http.NewRequest("POST", "/refresh", nil)
-	req.Header.Set("Authorization", "Bearer "+refresh)
+	req.AddCookie(&http.Cookie{
+		Name:  middleware.RefreshTokenCookieName,
+		Value: refresh,
+	})
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -63,10 +66,13 @@ func TestRefreshToken_Success(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response, "access_token")
-	assert.Contains(t, response, "refresh_token")
 	assert.Contains(t, response, "token_type")
 	assert.NotEqual(t, access, response["access_token"])
-	assert.NotEqual(t, refresh, response["refresh_token"])
+
+	setCookie := w.Header().Get("Set-Cookie")
+	assert.NotEmpty(t, setCookie)
+	assert.Contains(t, setCookie, middleware.RefreshTokenCookieName+"=")
+	assert.NotContains(t, setCookie, middleware.RefreshTokenCookieName+"="+refresh)
 
 	userRepoMock.AssertExpectations(t)
 	authRepoMock.AssertExpectations(t)
@@ -106,7 +112,10 @@ func TestRefreshToken_Fail_AccessTokenProvided(t *testing.T) {
 	r.POST("/refresh", authHandler.Refresh)
 
 	req, _ := http.NewRequest("POST", "/refresh", nil)
-	req.Header.Set("Authorization", "Bearer "+access)
+	req.AddCookie(&http.Cookie{
+		Name:  middleware.RefreshTokenCookieName,
+		Value: access,
+	})
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
