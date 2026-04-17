@@ -44,7 +44,7 @@ func TestRefreshToken_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	authRepoMock.On("GetByUserID", mock.Anything, identity.UserID).Return(refresh, nil)
+	authRepoMock.On("GetByUserID", mock.Anything, identity.UserID).Return(utils.Hash(refresh), nil)
 
 	authHandler := handler.NewAuthHandler(authService)
 
