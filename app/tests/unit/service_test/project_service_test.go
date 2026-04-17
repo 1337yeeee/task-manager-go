@@ -19,22 +19,22 @@ func TestProjectService_GetAll_Success(t *testing.T) {
 	// Подготавливаем тестовые данные
 	expectedProjects := []models.Project{
 		{
-			ID:        "project-1",
-			Name:      "Project 1",
-			Desc:      "Description 1",
-			CreatedBy: "user-1",
-			UpdatedBy: "user-1",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			ID:          "project-1",
+			Name:        "Project 1",
+			Description: "Description 1",
+			CreatedBy:   "user-1",
+			UpdatedBy:   "user-1",
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 		{
-			ID:        "project-2",
-			Name:      "Project 2",
-			Desc:      "Description 2",
-			CreatedBy: "user-2",
-			UpdatedBy: "user-2",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			ID:          "project-2",
+			Name:        "Project 2",
+			Description: "Description 2",
+			CreatedBy:   "user-2",
+			UpdatedBy:   "user-2",
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		},
 	}
 
@@ -56,7 +56,7 @@ func TestProjectService_GetAll_Success(t *testing.T) {
 	for i, expected := range expectedProjects {
 		assert.Equal(t, expected.ID, projects[i].ID)
 		assert.Equal(t, expected.Name, projects[i].Name)
-		assert.Equal(t, expected.Desc, projects[i].Desc)
+		assert.Equal(t, expected.Description, projects[i].Description)
 		assert.Equal(t, expected.CreatedBy, projects[i].CreatedBy)
 	}
 
@@ -97,7 +97,7 @@ func TestProjectCreation_Success(t *testing.T) {
 
 	assert.NotEmpty(t, capturedProject.ID, "ID must be set")
 	assert.Equal(t, projectName, capturedProject.Name)
-	assert.Equal(t, projectDesc, capturedProject.Desc)
+	assert.Equal(t, projectDesc, capturedProject.Description)
 	assert.Equal(t, identity.UserID, capturedProject.CreatedBy)
 	assert.Equal(t, identity.UserID, capturedProject.UpdatedBy)
 	assert.False(t, capturedProject.CreatedAt.IsZero(), "CreatedAt must be set")
@@ -112,13 +112,13 @@ func TestGetByID_Success(t *testing.T) {
 	const projectID = "project-1"
 
 	project1 := &models.Project{
-		ID:        projectID,
-		Name:      "Project 1",
-		Desc:      "Description 1",
-		CreatedBy: "user-1",
-		UpdatedBy: "user-1",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          projectID,
+		Name:        "Project 1",
+		Description: "Description 1",
+		CreatedBy:   "user-1",
+		UpdatedBy:   "user-1",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	repo.On("GetByID", mock.Anything, projectID).Return(project1, nil)
@@ -154,13 +154,13 @@ func TestProjectUpdate(t *testing.T) {
 	updTime := time.Now()
 
 	project := &models.Project{
-		ID:        projectID,
-		Name:      projectName,
-		Desc:      "Description 1",
-		CreatedBy: "user-1",
-		UpdatedBy: "user-1",
-		CreatedAt: time.Now(),
-		UpdatedAt: updTime,
+		ID:          projectID,
+		Name:        projectName,
+		Description: "Description 1",
+		CreatedBy:   "user-1",
+		UpdatedBy:   "user-1",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   updTime,
 	}
 
 	identity := auth.NewIdentity("user-ID", auth.UserRoleAdmin)
@@ -210,13 +210,13 @@ func TestProjectDelete(t *testing.T) {
 
 	const projectID = "project-1"
 	project1 := &models.Project{
-		ID:        projectID,
-		Name:      "Project 1",
-		Desc:      "Description 1",
-		CreatedBy: "user-1",
-		UpdatedBy: "user-1",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          projectID,
+		Name:        "Project 1",
+		Description: "Description 1",
+		CreatedBy:   "user-1",
+		UpdatedBy:   "user-1",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	repo.On("GetByID", mock.Anything, projectID).Return(project1, nil)

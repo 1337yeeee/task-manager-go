@@ -35,8 +35,8 @@ func (s projectService) GetAll(ctx context.Context) ([]models.Project, error) {
 
 func (s projectService) Create(ctx context.Context, identity *auth.Identity, name string, desc string) (*models.Project, error) {
 	project := models.Project{
-		Name: name,
-		Desc: desc,
+		Name:        name,
+		Description: desc,
 	}
 
 	project.ID = utils.NewUUID()
@@ -73,8 +73,8 @@ func (s projectService) Update(ctx context.Context, identity *auth.Identity, id 
 		changed = true
 	}
 
-	if desc != nil && project.Desc != *desc {
-		project.Desc = *desc
+	if desc != nil && project.Description != *desc {
+		project.Description = *desc
 		changed = true
 	}
 

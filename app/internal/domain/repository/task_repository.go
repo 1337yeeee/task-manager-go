@@ -24,7 +24,7 @@ func NewTaskRepository(db *gorm.DB) TaskRepository {
 
 func (r taskRepository) GetByProject(ctx context.Context, project *models.Project) ([]models.Task, error) {
 	var tasks []models.Task
-	return tasks, r.db.WithContext(ctx).Find(&tasks).Where("project_id = ?", project.ID).Error
+	return tasks, r.db.WithContext(ctx).Where("project_id = ?", project.ID).Order("updated_at desc").Find(&tasks).Error
 }
 
 func (r taskRepository) Create(ctx context.Context, task *models.Task) error {
@@ -32,7 +32,7 @@ func (r taskRepository) Create(ctx context.Context, task *models.Task) error {
 }
 
 func (r taskRepository) GetByID(ctx context.Context, id string) (*models.Task, error) {
-	var task *models.Task
+	task := &models.Task{}
 	return task, r.db.WithContext(ctx).First(task, "id = ?", id).Error
 }
 

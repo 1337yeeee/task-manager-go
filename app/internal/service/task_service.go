@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"task-manager/internal/auth"
 	"task-manager/internal/domain/models"
 	"task-manager/internal/domain/repository"
@@ -46,15 +47,17 @@ func (s *taskService) Create(ctx context.Context, identity *auth.Identity, proje
 	}
 
 	task := &models.Task{
-		ID:        utils.NewUUID(),
-		ProjectID: project.ID,
-		Name:      name,
-		Content:   content,
-		Status:    models.TaskStatusCreated,
-		CreatedBy: identity.UserID,
-		UpdatedBy: identity.UserID,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          utils.NewUUID(),
+		ProjectID:   project.ID,
+		Name:        name,
+		Content:     content,
+		Status:      models.TaskStatusCreated,
+		AuditorID:   identity.UserID,
+		ExecutiveID: identity.UserID,
+		CreatedBy:   identity.UserID,
+		UpdatedBy:   identity.UserID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	err = s.repo.Create(ctx, task)
@@ -147,14 +150,17 @@ func (s *taskService) Update(ctx context.Context, identity *auth.Identity, id st
 func (s *taskService) UpdateStatus(ctx context.Context, identity *auth.Identity, id string, status string) error {
 	task, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		log.Println("get task err:", err)
 		return err
 	}
 	if task == nil {
+		log.Println("get task err: task not found")
 		return myerrors.EntityNotFound("task")
 	}
 
 	taskStatus := models.ParseTaskStatus(status)
 	if taskStatus == nil {
+		log.Println("ParseTaskStatus err: invalid task status")
 		return myerrors.InvalidTaskStatus()
 	}
 

@@ -11,5 +11,5 @@ func Hash(s string) string {
 }
 
 func CompareHash(s string, hash string) int {
-	return strings.Compare(s, hash)
+	return strings.Compare(Hash(s), hash)
 }

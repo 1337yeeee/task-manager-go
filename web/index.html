@@ -17,7 +17,7 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <h2>Projects</h2>
-            <button class="btn primary">+ Project</button>
+            <button id="newProjectBtn" class="btn primary">New Project</button>
         </div>
 
         <ul class="project-list">
@@ -35,7 +35,7 @@
         <!-- Header -->
         <div class="main-header">
             <h1>Project Alpha</h1>
-            <button class="btn primary">+ Task</button>
+            <button id="newTaskBtn" class="btn primary">+ Task</button>
         </div>
 
         <div class="desc-header">
@@ -48,19 +48,19 @@
             <!-- Column -->
             <div class="column" id="created">
                 <h3>Created</h3>
-                <div class="task-list"></div>
+                <div class="task-list" data-status-id="created"></div>
             </div>
 
             <!-- Column -->
-            <div class="column" id="in-progress">
+            <div class="column" id="in_progress">
                 <h3>In Progress</h3>
-                <div class="task-list"></div>
+                <div class="task-list" data-status-id="in_progress"></div>
             </div>
 
             <!-- Column -->
             <div class="column" id="done">
                 <h3>Done</h3>
-                <div class="task-list"></div>
+                <div class="task-list" data-status-id="done"></div>
             </div>
 
         </div>
@@ -68,39 +68,41 @@
 </div>
 
 <!-- Create Project Modal -->
-<div class="modal hidden">
+<div id="createProjectModal" class="modal hidden">
     <div class="modal-content">
         <h2>Create Project</h2>
-        <input type="text" placeholder="Name" />
-        <textarea placeholder="Description"></textarea>
-        <button class="btn primary">Create</button>
+        <input id="projectNameInput" type="text" placeholder="Name" />
+        <textarea id="projectDescInput" placeholder="Description"></textarea>
+        <button id="saveProjectBtn" class="btn primary">Save</button>
+        <div id="createProjectError"></div>
     </div>
 </div>
 
 <!-- Create Task Modal -->
-<div class="modal hidden">
+<div id ="createTaskModal" class="modal hidden">
     <div class="modal-content">
         <h2>Create Task</h2>
-        <input type="text" placeholder="Name" />
-        <textarea placeholder="Content"></textarea>
+        <input id="taskNameInput" type="text" placeholder="Name" />
+        <textarea id="taskContentInput" placeholder="Content"></textarea>
 
-        <label>Executive</label>
-        <select>
-            <option>User1</option>
-        </select>
+<!--        <label>Executive</label>-->
+<!--        <select>-->
+<!--            <option>User1</option>-->
+<!--        </select>-->
 
-        <label>Auditor</label>
-        <select>
-            <option>User2</option>
-        </select>
+<!--        <label>Auditor</label>-->
+<!--        <select>-->
+<!--            <option>User2</option>-->
+<!--        </select>-->
 
-        <button class="btn primary">Create</button>
+        <button id="saveTaskBtn" class="btn primary">Create</button>
+        <div id="createTaskError"></div>
     </div>
 </div>
 
 <script src="js/auth.js?q=12"></script>
 <script src="js/api.js?q=12"></script>
-<script src="js/dashboard.js?q=12"></script>
+<script src="js/dashboard.js?q=11"></script>
 
 </body>
 </html>

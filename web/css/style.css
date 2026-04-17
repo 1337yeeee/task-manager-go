@@ -1,3 +1,8 @@
+html,
+body {
+    height: 100%;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -7,11 +12,13 @@
 
 body {
     background: #f5f6fa;
+    overflow: hidden;
 }
 
 .app {
     display: flex;
     height: 100vh;
+    min-height: 0;
 }
 
 /* Sidebar */
@@ -23,6 +30,7 @@ body {
     padding: 16px;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .sidebar-header {
@@ -68,6 +76,8 @@ body {
     padding: 20px;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .main-header {
@@ -85,16 +95,22 @@ body {
 .board {
     display: flex;
     gap: 16px;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .column {
     flex: 1;
+    min-width: 280px;
     background: #eaeaf0;
     border-radius: 8px;
     padding: 10px;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .column h3 {
@@ -106,6 +122,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 /* Task */
@@ -137,6 +156,12 @@ body {
     color: gray;
     display: flex;
     justify-content: space-between;
+    gap: 10px;
+}
+
+.task-footer span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .menu-btn {
@@ -219,4 +244,46 @@ body {
 
 .hidden {
     display: none;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    background: #f9fafb;
+}
+
+.modal-content input:focus {
+    border-color: #4f46e5;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+}
+
+.modal-content input::placeholder {
+    color: #9ca3af;
+}
+
+.modal-content textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    background: #f9fafb;
+}
+
+.modal-content textarea:focus {
+    border-color: #4f46e5;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+}
+
+.modal-content textarea::placeholder {
+    color: #9ca3af;
 }

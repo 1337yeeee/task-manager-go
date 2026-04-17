@@ -3,17 +3,17 @@ package models
 import "time"
 
 type Task struct {
-	ID          string `gorm:"primaryKey;size:40"`
-	ProjectID   string `gorm:"size:40;not null"`
-	Name        string `gorm:"size:50;not null"`
-	Content     string
-	ExecutiveID string `gorm:"size:40;not null"`
-	AuditorID   string `gorm:"size:40;"`
-	CreatedBy   string `gorm:"size:40;"`
-	UpdatedBy   string `gorm:"size:40;"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Status      TaskStatus `gorm:"size:50;not null"`
+	ID          string     `gorm:"primaryKey;size:40" json:"id"`
+	ProjectID   string     `gorm:"size:40;not null" json:"project_id"`
+	Name        string     `gorm:"size:50;not null" json:"name"`
+	Content     string     `json:"content"`
+	ExecutiveID string     `gorm:"size:40;not null" json:"executive_id"`
+	AuditorID   string     `gorm:"size:40;" json:"auditor_id"`
+	CreatedBy   string     `gorm:"size:40;" json:"created_by"`
+	UpdatedBy   string     `gorm:"size:40;" json:"updated_by"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	Status      TaskStatus `gorm:"size:50;not null" json:"status"`
 }
 
 type TaskStatus string

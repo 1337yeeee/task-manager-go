@@ -20,25 +20,25 @@ func NewProjectHandler(projectService service.ProjectService) *ProjectHandler {
 
 // createProjectRequest represents project creation payload
 type createProjectRequest struct {
-	Name string `json:"name" binding:"required" example:"Task Manager"`
-	Desc string `json:"desc" example:"Backend service for task management"`
+	Name        string `json:"name" binding:"required" example:"Task Manager"`
+	Description string `json:"description" example:"Backend service for task management"`
 }
 
 // updateProjectRequest represents project update payload
 type updateProjectRequest struct {
-	Name *string `json:"name" binding:"omitempty" example:"Task Manager API"`
-	Desc *string `json:"desc" binding:"omitempty" example:"Updated project description"`
+	Name        *string `json:"name" binding:"omitempty" example:"Task Manager API"`
+	Description *string `json:"description" binding:"omitempty" example:"Updated project description"`
 }
 
 // ProjectResponse represents project model in API docs
 type ProjectResponse struct {
-	ID        string    `json:"id" example:"7c3d9d0a-8dcb-4f7f-9b5e-2a12d4e9a001"`
-	Name      string    `json:"name" example:"Task Manager"`
-	Desc      string    `json:"desc" example:"Backend service for task management"`
-	CreatedBy string    `json:"created_by" example:"d290f1ee-6c54-4b01-90e6-d701748f0851"`
-	UpdatedBy string    `json:"updated_by" example:"d290f1ee-6c54-4b01-90e6-d701748f0851"`
-	CreatedAt time.Time `json:"created_at" example:"2026-04-02T12:00:00Z"`
-	UpdatedAt time.Time `json:"updated_at" example:"2026-04-02T12:30:00Z"`
+	ID          string    `json:"id" example:"7c3d9d0a-8dcb-4f7f-9b5e-2a12d4e9a001"`
+	Name        string    `json:"name" example:"Task Manager"`
+	Description string    `json:"description" example:"Backend service for task management"`
+	CreatedBy   string    `json:"created_by" example:"d290f1ee-6c54-4b01-90e6-d701748f0851"`
+	UpdatedBy   string    `json:"updated_by" example:"d290f1ee-6c54-4b01-90e6-d701748f0851"`
+	CreatedAt   time.Time `json:"created_at" example:"2026-04-02T12:00:00Z"`
+	UpdatedAt   time.Time `json:"updated_at" example:"2026-04-02T12:30:00Z"`
 }
 
 // ProjectDataResponse wraps single project response
@@ -105,7 +105,7 @@ func (h *ProjectHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	project, err := h.service.Create(ctx, identity, req.Name, req.Desc)
+	project, err := h.service.Create(ctx, identity, req.Name, req.Description)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in create"})
 		log.Println(err)
@@ -164,7 +164,7 @@ func (h *ProjectHandler) Update(ctx *gin.Context) {
 		return
 	}
 
-	project, err := h.service.Update(ctx, identity, projectId, req.Name, req.Desc)
+	project, err := h.service.Update(ctx, identity, projectId, req.Name, req.Description)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in update"})
 		log.Println(err)

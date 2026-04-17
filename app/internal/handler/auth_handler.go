@@ -134,7 +134,7 @@ func (h *AuthHandler) setRefreshTokenCookie(ctx *gin.Context, refreshToken strin
 		refreshToken,
 		int(utils.DefaultRefreshTTL.Seconds()),
 		"/",
-		"SameSite",
+		"localhost",
 		false,
 		true,
 	)
