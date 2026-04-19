@@ -38,7 +38,7 @@ func TestAuthService_Login_Success(t *testing.T) {
 
 	authService := service.NewAuthService(userRepo, authRepo, tokenManager)
 
-	accessToken, refreshToken, err := authService.Login(
+	accessToken, refreshToken, role, err := authService.Login(
 		context.Background(),
 		user.Email,
 		password,
@@ -47,6 +47,7 @@ func TestAuthService_Login_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, accessToken)
 	assert.NotEmpty(t, refreshToken)
+	assert.Equal(t, user.Role, role)
 
 	userRepo.AssertExpectations(t)
 	authRepo.AssertExpectations(t)
@@ -72,7 +73,7 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 
 	authService := service.NewAuthService(userRepo, authRepo, tokenManager)
 
-	accessToken, refreshToken, err := authService.Login(
+	accessToken, refreshToken, role, err := authService.Login(
 		context.Background(),
 		user.Email,
 		"wrong-password",
@@ -81,6 +82,7 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, accessToken)
 	assert.Empty(t, refreshToken)
+	assert.Empty(t, role)
 
 	userRepo.AssertExpectations(t)
 	authRepo.AssertExpectations(t)
@@ -97,7 +99,7 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 
 	authService := service.NewAuthService(userRepo, authRepo, tokenManager)
 
-	accessToken, refreshToken, err := authService.Login(
+	accessToken, refreshToken, role, err := authService.Login(
 		context.Background(),
 		"test@test.com",
 		"password",
@@ -106,6 +108,7 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, accessToken)
 	assert.Empty(t, refreshToken)
+	assert.Empty(t, role)
 
 	userRepo.AssertExpectations(t)
 	authRepo.AssertExpectations(t)

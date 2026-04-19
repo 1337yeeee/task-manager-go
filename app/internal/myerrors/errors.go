@@ -8,6 +8,7 @@ type IdentityNotFoundInContextError error
 type EntityNotFoundError error
 type InvalidTaskStatusError error
 type EntityAlreadyExistsError error
+type ForbiddenActionError error
 
 func InvalidCredentials() InvalidCredentialsError {
 	return InvalidCredentialsError(errors.New("invalid credentials"))
@@ -27,4 +28,8 @@ func InvalidTaskStatus() InvalidTaskStatusError {
 
 func EntityAlreadyExists(entity string) EntityAlreadyExistsError {
 	return EntityAlreadyExistsError(errors.New(entity + " already exists"))
+}
+
+func ForbiddenAction(message string) ForbiddenActionError {
+	return ForbiddenActionError(errors.New(message))
 }

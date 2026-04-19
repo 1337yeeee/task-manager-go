@@ -164,6 +164,16 @@ func (s *taskService) UpdateStatus(ctx context.Context, identity *auth.Identity,
 		return myerrors.InvalidTaskStatus()
 	}
 
+	if identity.Role == auth.UserRoleViewer {
+		return myerrors.ForbiddenAction("viewer cannot update task")
+	}
+
+	if identity.Role == auth.UserRoleEditor &&
+		task.Status == models.TaskStatusDone &&
+		*taskStatus != models.TaskStatusDone {
+		return myerrors.ForbiddenAction("editor cannot change status of done task")
+	}
+
 	task.Status = *taskStatus
 	task.UpdatedAt = time.Now()
 	task.UpdatedBy = identity.UserID

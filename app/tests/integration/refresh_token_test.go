@@ -39,7 +39,7 @@ func TestRefreshToken_Success(t *testing.T) {
 	ctx := context.Background()
 
 	authService := service.NewAuthService(userRepoMock, authRepoMock, tokenManager)
-	access, refresh, err := authService.Login(ctx, UserEmail, UserPassword)
+	access, refresh, _, err := authService.Login(ctx, UserEmail, UserPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,6 +66,7 @@ func TestRefreshToken_Success(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response, "access_token")
+	assert.Contains(t, response, "role")
 	assert.Contains(t, response, "token_type")
 	assert.NotEqual(t, access, response["access_token"])
 
@@ -101,7 +102,7 @@ func TestRefreshToken_Fail_AccessTokenProvided(t *testing.T) {
 	ctx := context.Background()
 
 	authService := service.NewAuthService(userRepoMock, authRepoMock, tokenManager)
-	access, _, err := authService.Login(ctx, UserEmail, UserPassword)
+	access, _, _, err := authService.Login(ctx, UserEmail, UserPassword)
 	if err != nil {
 		t.Fatal(err)
 	}

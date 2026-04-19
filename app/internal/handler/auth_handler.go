@@ -27,6 +27,7 @@ type loginRequest struct {
 // TokenResponse represents auth tokens
 type TokenResponse struct {
 	AccessToken string `json:"access_token" example:"jwt-access-token"`
+	Role        string `json:"role" example:"viewer" enums:"admin,viewer,editor"`
 	TokenType   string `json:"token_type" example:"Bearer"`
 }
 
@@ -60,7 +61,7 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.service.Login(ctx.Request.Context(), req.Email, req.Password)
+	access, refresh, role, err := h.service.Login(ctx.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		responses.InvalidCredentials(ctx)
 		return
@@ -69,6 +70,7 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 	h.setRefreshTokenCookie(ctx, refresh)
 	ctx.JSON(http.StatusOK, TokenResponse{
 		AccessToken: access,
+		Role:        string(role),
 		TokenType:   "Bearer",
 	})
 }
@@ -94,7 +96,7 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 
 	refreshToken := tokenRaw.(string)
 
-	access, refresh, err := h.service.RefreshToken(ctx, identity, refreshToken)
+	access, refresh, role, err := h.service.RefreshToken(ctx, identity, refreshToken)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
 		return
@@ -103,6 +105,7 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 	h.setRefreshTokenCookie(ctx, refresh)
 	ctx.JSON(http.StatusOK, TokenResponse{
 		AccessToken: access,
+		Role:        string(role),
 		TokenType:   "Bearer",
 	})
 }

@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"task-manager/internal/auth"
+	"task-manager/internal/myerrors"
 	"task-manager/internal/responses"
 	"task-manager/internal/service"
 	"time"
@@ -236,6 +238,12 @@ func (h TaskHandler) UpdateStatus(ctx *gin.Context) {
 
 	err := h.taskService.UpdateStatus(ctx, identity, id, req.Status)
 	if err != nil {
+		var forbiddenErr myerrors.ForbiddenActionError
+		if errors.As(err, &forbiddenErr) {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+
 		log.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in update"})
 		return

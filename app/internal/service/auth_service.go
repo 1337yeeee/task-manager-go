@@ -11,8 +11,8 @@ import (
 )
 
 type AuthService interface {
-	Login(ctx context.Context, email, password string) (string, string, error)
-	RefreshToken(ctx context.Context, identity *auth.Identity, token string) (string, string, error)
+	Login(ctx context.Context, email, password string) (string, string, auth.UserRole, error)
+	RefreshToken(ctx context.Context, identity *auth.Identity, token string) (string, string, auth.UserRole, error)
 	Logout(ctx context.Context, identity *auth.Identity) error
 }
 
@@ -30,57 +30,57 @@ func NewAuthService(repo repository.UserRepository, authRepo repository.AuthRepo
 	}
 }
 
-func (s *authService) Login(ctx context.Context, email, password string) (string, string, error) {
+func (s *authService) Login(ctx context.Context, email, password string) (string, string, auth.UserRole, error) {
 	user, err := s.userRepository.FindUserByEmail(ctx, email)
 	if err != nil {
 		log.Println("error finding user in authService.Login", err)
-		return "", "", myerrors.InvalidCredentials()
+		return "", "", "", myerrors.InvalidCredentials()
 	}
 
 	if err := utils.CheckPasswordHash(password, user.Password); err != nil {
 		log.Println("error checking password in authService.Login: ", err)
-		return "", "", myerrors.InvalidCredentials()
+		return "", "", "", myerrors.InvalidCredentials()
 	}
 
 	accessToken, refreshToken, err := s.generateTokens(user.ID, user.Role)
 	if err != nil {
 		log.Println("error generating tokens in authService.Login: ", err)
-		return "", "", myerrors.CouldNotCreateToken()
+		return "", "", "", myerrors.CouldNotCreateToken()
 	}
 
 	err = s.storeToken(ctx, user.ID, refreshToken)
 	if err != nil {
 		log.Println("error storing token in authService.Login", err)
-		return "", "", myerrors.CouldNotCreateToken()
+		return "", "", "", myerrors.CouldNotCreateToken()
 	}
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, user.Role, nil
 }
 
-func (s *authService) RefreshToken(ctx context.Context, identity *auth.Identity, token string) (string, string, error) {
+func (s *authService) RefreshToken(ctx context.Context, identity *auth.Identity, token string) (string, string, auth.UserRole, error) {
 	storedToken, err := s.authRepository.GetByUserID(ctx, identity.UserID)
 	if err != nil {
 		log.Println("error getting stored refresh token", err)
-		return "", "", myerrors.InvalidCredentials()
+		return "", "", "", myerrors.InvalidCredentials()
 	}
 
 	if utils.CompareHash(token, storedToken) != 0 {
 		log.Println("token from request not equal to token in the store in authService.Login")
-		return "", "", myerrors.InvalidCredentials()
+		return "", "", "", myerrors.InvalidCredentials()
 	}
 
 	accessToken, refreshToken, err := s.generateTokens(identity.UserID, identity.Role)
 	if err != nil {
-		return "", "", myerrors.CouldNotCreateToken()
+		return "", "", "", myerrors.CouldNotCreateToken()
 	}
 
 	err = s.storeToken(ctx, identity.UserID, refreshToken)
 	if err != nil {
 		log.Println(err)
-		return "", "", myerrors.CouldNotCreateToken()
+		return "", "", "", myerrors.CouldNotCreateToken()
 	}
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, identity.Role, nil
 }
 
 func (s *authService) Logout(ctx context.Context, identity *auth.Identity) error {
