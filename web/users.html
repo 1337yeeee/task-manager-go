@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Users</title>
+    <link rel="stylesheet" href="css/style.css?id=12" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Admin</h2>
+            <button id="addUserBtn" class="btn primary">Add User</button>
+        </div>
+
+        <div class="sidebar-footer">
+            <button id="projectsBtn" class="btn">Projects</button>
+            <button id="profileBtn" class="btn">Profile</button>
+            <button id="usersBtn" class="btn">Users</button>
+            <button id="logoutBtn" class="btn">Logout</button>
+        </div>
+    </aside>
+
+    <main class="main users-main">
+        <div class="main-header">
+            <h1>Users</h1>
+        </div>
+        <div class="desc-header">
+            <p>Manage user roles and account access.</p>
+        </div>
+
+        <div id="usersError" class="users-error"></div>
+        <div id="usersList" class="users-grid"></div>
+    </main>
+</div>
+
+<div id="addUserModal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Create User</h2>
+        <input id="newUserEmail" type="email" placeholder="Email" />
+        <input id="newUserPassword" type="password" minlength="8" placeholder="Password" />
+        <select id="newUserRole">
+            <option value="viewer">viewer</option>
+            <option value="editor">editor</option>
+            <option value="admin">admin</option>
+        </select>
+        <button id="saveUserBtn" class="btn primary">Save</button>
+        <div id="addUserError" class="users-error"></div>
+    </div>
+</div>
+
+<script src="js/auth.js?q=12"></script>
+<script src="js/api.js?q=12"></script>
+<script src="js/users.js?q=1"></script>
+</body>
+</html>

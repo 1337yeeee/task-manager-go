@@ -3,6 +3,7 @@ window.APP_CONFIG = window.APP_CONFIG || {
 };
 
 const ACCESS_TOKEN_KEY = "access_token";
+const USER_ROLE_KEY = "user_role";
 
 let refreshRequest = null;
 
@@ -10,14 +11,52 @@ function getAccessToken() {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
-function setTokens(accessToken) {
+function getUserRole() {
+    const storedRole = localStorage.getItem(USER_ROLE_KEY);
+    if (storedRole) {
+        return storedRole;
+    }
+
+    const tokenRole = getRoleFromAccessToken();
+    if (tokenRole) {
+        localStorage.setItem(USER_ROLE_KEY, tokenRole);
+    }
+
+    return tokenRole;
+}
+
+function getRoleFromAccessToken() {
+    const token = getAccessToken();
+    if (!token) {
+        return null;
+    }
+
+    const parts = token.split(".");
+    if (parts.length < 2) {
+        return null;
+    }
+
+    try {
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+        return payload.Role || payload.role || null;
+    } catch (err) {
+        return null;
+    }
+}
+
+function setTokens(accessToken, role) {
     if (accessToken) {
         localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    }
+
+    if (role) {
+        localStorage.setItem(USER_ROLE_KEY, role);
     }
 }
 
 function clearTokens() {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(USER_ROLE_KEY);
 }
 
 function redirectToLogin() {
@@ -54,7 +93,7 @@ function login(email, password) {
             password: password
         })
     }).done(function(response) {
-        setTokens(response.access_token);
+        setTokens(response.access_token, response.role);
     });
 }
 
@@ -68,7 +107,7 @@ function refreshAccessToken() {
         method: "POST",
         contentType: "application/json",
     }).done(function(response) {
-        setTokens(response.access_token);
+        setTokens(response.access_token, response.role);
     }).fail(function() {
         redirectToLogin();
     }).always(function() {

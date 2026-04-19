@@ -163,11 +163,16 @@ body {
     display: flex;
     justify-content: space-between;
     gap: 10px;
+    margin-top: 6px;
 }
 
 .task-footer span {
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+.task-footer-meta {
+    color: #6b7280;
 }
 
 .menu-btn {
@@ -187,20 +192,52 @@ body {
 /* Context menu */
 
 .context-menu {
-    position: absolute;
-    top: 30px;
-    right: 10px;
+    position: static;
     background: white;
     border: 1px solid #ccc;
     padding: 10px;
     border-radius: 6px;
-    width: 150px;
+    width: 100%;
+    margin-top: 8px;
     z-index: 10;
 }
 
 .context-menu select {
     width: 100%;
     margin-bottom: 8px;
+}
+
+.task-assign-menu {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.task-assign-menu label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.assign-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1f2937;
+    background: #f8fafc;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.assign-select:focus {
+    border-color: #4f46e5;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
 /* Buttons */
@@ -292,4 +329,82 @@ body {
 
 .modal-content textarea::placeholder {
     color: #9ca3af;
+}
+
+.modal-content select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    background: #f9fafb;
+}
+
+.users-main {
+    overflow: auto;
+}
+
+.users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.user-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.user-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.user-card-header h3 {
+    font-size: 16px;
+    overflow-wrap: anywhere;
+}
+
+.user-meta {
+    font-size: 12px;
+    color: #6b7280;
+    overflow-wrap: anywhere;
+}
+
+.user-status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.user-status.active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.user-status.suspended {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.user-active-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-card-error,
+.users-error {
+    color: #dc2626;
+    font-size: 13px;
+    min-height: 18px;
 }

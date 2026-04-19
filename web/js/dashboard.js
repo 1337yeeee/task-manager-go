@@ -1,7 +1,10 @@
 const state = {
     projects: [],
     tasks: [],
-    currentProjectId: null
+    currentProjectId: null,
+    currentUserRole: null,
+    assignableUsers: [],
+    assignableUsersLoaded: false
 };
 
 function getProjectsFromResponse(response) {
@@ -61,13 +64,130 @@ function updateProjectUrl(projectId, shouldReplace) {
 }
 
 function updateTaskStatus(task) {
-    apiRequest("PATCH", `api/tasks/${task.id}/status`, {"status": task.status})
+    return apiRequest("PATCH", `api/tasks/${task.id}/status`, {"status": task.status})
         .done(function() {
             console.log("status updated successfully")
         })
         .fail(function(err) {
             console.error("Failed to load projects", err);
         });
+}
+
+function getCurrentUserRole() {
+    state.currentUserRole = getUserRole();
+    return state.currentUserRole;
+}
+
+function isViewerRole() {
+    return getCurrentUserRole() === "viewer";
+}
+
+function isEditorRole() {
+    return getCurrentUserRole() === "editor";
+}
+
+function canCreateProject() {
+    const role = getCurrentUserRole();
+    return role === "admin";
+}
+
+function canCreateTask() {
+    const role = getCurrentUserRole();
+    return role === "admin" || role === "editor";
+}
+
+function canAssignTaskPeople() {
+    const role = getCurrentUserRole();
+    return role === "admin" || role === "editor";
+}
+
+function canMoveTaskBetweenColumns(task, newStatus, oldStatus) {
+    if (isViewerRole()) {
+        return false;
+    }
+
+    if (isEditorRole() && oldStatus === "done" && newStatus !== "done") {
+        return false;
+    }
+
+    return true;
+}
+
+function applyRolePermissions() {
+    const role = getCurrentUserRole();
+
+    $("#newProjectBtn").toggle(role === "admin");
+    $("#newTaskBtn").toggle(role === "admin" || role === "editor");
+    $("#usersBtn").toggleClass("hidden", role !== "admin");
+
+    $(".task-list").sortable("option", "disabled", role === "viewer");
+}
+
+function getUsersFromResponse(response) {
+    if (response && Array.isArray(response.users)) {
+        return response.users;
+    }
+
+    if (response && Array.isArray(response.data)) {
+        return response.data;
+    }
+
+    if (Array.isArray(response)) {
+        return response;
+    }
+
+    return [];
+}
+
+function normalizeUser(user) {
+    return {
+        id: user.id || user.ID,
+        name: user.name || user.Name
+    };
+}
+
+function loadAssignableUsers() {
+    if (!canAssignTaskPeople()) {
+        return $.Deferred().resolve([]).promise();
+    }
+
+    if (state.assignableUsersLoaded) {
+        return $.Deferred().resolve(state.assignableUsers).promise();
+    }
+
+    return apiRequest("GET", "api/users?roles[]=admin&roles[]=editor&is_active=true")
+        .done(function(response) {
+            state.assignableUsers = getUsersFromResponse(response).map(normalizeUser);
+            state.assignableUsersLoaded = true;
+        })
+        .then(function() {
+            return state.assignableUsers;
+        });
+}
+
+function getUserDisplayNameFromTask(taskUser, fallbackId) {
+    if (taskUser && taskUser.name) {
+        return taskUser.name;
+    }
+
+    return "not assigned";
+}
+
+function buildUserOptionsHtml(selectedUserId) {
+    return state.assignableUsers
+        .map(function(user) {
+            const selected = user.id === selectedUserId ? "selected" : "";
+            return `<option value="${user.id}" ${selected}>${user.name}</option>`;
+        })
+        .join("");
+}
+
+function populateAssignmentControls(card, task) {
+    const execSelect = card.find(".assign-executive");
+    const auditSelect = card.find(".assign-auditor");
+
+    execSelect.html(buildUserOptionsHtml(task.executive_id));
+    auditSelect.html(buildUserOptionsHtml(task.auditor_id));
 }
 
 function renderProjectList() {
@@ -154,18 +274,35 @@ function renderTasks(projectId) {
             state.tasks = tasks
 
             tasks.forEach(t => {
+                const canAssign = canAssignTaskPeople();
+                const executiveLabel = getUserDisplayNameFromTask(t.executive_user, t.executive_id);
+                const auditorLabel = getUserDisplayNameFromTask(t.auditor_user, t.auditor_id);
+                const createdByLabel = getUserDisplayNameFromTask(t.created_by_user, t.created_by);
+                const updatedByLabel = getUserDisplayNameFromTask(t.updated_by_user, t.updated_by);
+
                 const el = $(`
                     <div class="task-card" data-id="${t.id}">
                         <div class="task-header">
                             <span class="task-title">${t.name}</span>
-                            <button class="menu-btn">⋮</button>
+                            ${canAssign ? '<button class="menu-btn">⋮</button>' : ""}
                         </div>
 
                         <div class="task-content">${t.content}</div>
 
                         <div class="task-footer">
-                            <span>Exec: ${t.executive_id}</span>
-                            <span>Audit: ${t.auditor_id}</span>
+                            <span>Exec: ${executiveLabel}</span>
+                        </div>
+                        
+                        <div class="task-footer">
+                            <span>Audit: ${auditorLabel}</span>
+                        </div>
+
+                        <div class="task-footer task-footer-meta">
+                            <span>Updated by: ${updatedByLabel}</span>
+                        </div>
+                        
+                        <div class="task-footer task-footer-meta">
+                            <span>Created by: ${createdByLabel}</span>
                         </div>
 
                         <div class="task-edit hidden">
@@ -174,18 +311,12 @@ function renderTasks(projectId) {
                             <button class="btn save">Save</button>
                         </div>
 
-                        <div class="context-menu hidden">
+                        <div class="context-menu hidden task-assign-menu">
                             <label>Executive</label>
-                            <select>
-                                <option>User1</option>
-                                <option>User2</option>
-                            </select>
+                            <select class="assign-select assign-executive"></select>
 
                             <label>Auditor</label>
-                            <select>
-                                <option>User1</option>
-                                <option>User2</option>
-                            </select>
+                            <select class="assign-select assign-auditor"></select>
 
                             <button class="btn save">Save</button>
                         </div>
@@ -238,10 +369,19 @@ function closeCreateProjectModal() {
 }
 
 $("#newProjectBtn").click(function () {
+    if (!canCreateProject()) {
+        return;
+    }
+
     openCreateProjectModal();
 });
 
 $("#saveProjectBtn").click(function () {
+    if (!canCreateProject()) {
+        closeCreateProjectModal();
+        return;
+    }
+
     const name = $("#projectNameInput").val().trim();
     const desc = $("#projectDescInput").val().trim();
 
@@ -252,7 +392,7 @@ $("#saveProjectBtn").click(function () {
 
     apiRequest("POST", "api/projects", {
         name: name,
-        description: desc
+        desc: desc
     }).done(function(response) {
         const createdProject = getProjectFromResponse(response);
 
@@ -303,10 +443,19 @@ function closeCreateTaskModal() {
 }
 
 $("#newTaskBtn").click(function () {
+    if (!canCreateTask()) {
+        return;
+    }
+
     openCreateTaskModal();
 });
 
 $("#saveTaskBtn").click(function () {
+    if (!canCreateTask()) {
+        closeCreateTaskModal();
+        return;
+    }
+
     let createTaskError = $("#createTaskError")
     createTaskError.text("")
 
@@ -325,7 +474,7 @@ $("#saveTaskBtn").click(function () {
         content: content
     }).done(function() {
         renderTasks(currentProjectId);
-        closeCreateProjectModal();
+        closeCreateTaskModal();
     }).fail(function(err) {
         console.error("Failed to create project", err);
         createTaskError.text(err.message)
@@ -345,14 +494,34 @@ $("#taskNameInput, #taskContentInput").on("keydown", function (event) {
 
 $(".task-list").sortable({
     connectWith: ".task-list",
+    start: function(event, ui) {
+        const originalStatus = ui.item.closest(".task-list").data("status-id");
+        ui.item.data("original-status", originalStatus);
+    },
     stop: function (event, ui) {
         const taskId = ui.item.data("id");
         const newStatus = ui.item.parent().data("status-id");
-        console.log(ui.item.parent())
+        const oldStatus = ui.item.data("original-status");
 
         const task = state.tasks.find(t => t.id === taskId);
+        if (!task) {
+            renderTasks(state.currentProjectId);
+            return;
+        }
+
+        if (!canMoveTaskBetweenColumns(task, newStatus, oldStatus)) {
+            renderTasks(state.currentProjectId);
+            return;
+        }
+
+        if (newStatus === oldStatus) {
+            return;
+        }
+
         task.status = newStatus;
-        updateTaskStatus(task)
+        updateTaskStatus(task).fail(function() {
+            renderTasks(state.currentProjectId);
+        });
 
         console.log("Updated task status (stub)", task);
     }
@@ -391,26 +560,48 @@ $(document).on("click", ".menu-btn", function (e) {
     e.stopPropagation();
     $(".context-menu").addClass("hidden");
 
-    $(this).closest(".task-card").find(".context-menu").toggleClass("hidden");
+    const card = $(this).closest(".task-card");
+    const taskId = card.data("id");
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) {
+        return;
+    }
+
+    loadAssignableUsers().done(function() {
+        populateAssignmentControls(card, task);
+        card.find(".context-menu").toggleClass("hidden");
+    });
 });
 
-$(document).on("click", function () {
+$(document).on("click", function (event) {
+    if ($(event.target).closest(".context-menu, .menu-btn").length) {
+        return;
+    }
+
     $(".context-menu").addClass("hidden");
 });
 
 $(document).on("click", ".context-menu .save", function () {
     const card = $(this).closest(".task-card");
-    const id = card.data("id");
+    const taskId = card.data("id");
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task || !canAssignTaskPeople()) {
+        return;
+    }
 
-    const selects = card.find("select");
-    const exec = $(selects[0]).val();
-    const audit = $(selects[1]).val();
+    const exec = card.find(".assign-executive").val();
+    const audit = card.find(".assign-auditor").val();
 
-    const task = state.tasks.find(t => t.id === id);
-    task.executive = exec;
-    task.auditor = audit;
+    apiRequest("PUT", "api/tasks/" + taskId, {
+        executive_id: exec,
+        auditor_id: audit
+    }).done(function() {
+        renderTasks(state.currentProjectId);
+    }).fail(function(err) {
+        console.error("Failed to assign users to task", err);
+    });
 
-    renderTasks();
+    card.find(".context-menu").addClass("hidden");
 });
 
 /* =========================
@@ -419,6 +610,10 @@ $(document).on("click", ".context-menu .save", function () {
 
 $("#profileBtn").click(function () {
     alert("Go to profile page (stub)");
+});
+
+$("#usersBtn").click(function () {
+    window.location.href = "/users.html";
 });
 
 $("#logoutBtn").click(function () {
@@ -456,4 +651,5 @@ $(window).on("popstate", function () {
    INIT
 ========================= */
 
+applyRolePermissions();
 renderProjects();
