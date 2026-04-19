@@ -24,7 +24,7 @@ func NewProjectRepository(db *gorm.DB) ProjectRepository {
 
 func (r projectRepository) GetAll(ctx context.Context) ([]models.Project, error) {
 	var projects []models.Project
-	return projects, r.db.WithContext(ctx).Find(&projects).Error
+	return projects, r.db.WithContext(ctx).Order("updated_at desc").Find(&projects).Error
 }
 
 func (r projectRepository) Create(ctx context.Context, project *models.Project) error {
