@@ -13,7 +13,7 @@ import (
 
 type UserService interface {
 	Register(ctx context.Context, name string, email string, password string, role *auth.UserRole) (*models.User, error)
-	GetAll(ctx context.Context) ([]models.User, error)
+	GetAll(ctx context.Context, filter models.UserFilter) ([]models.User, error)
 	GetById(ctx context.Context, id string) (*models.User, error)
 	Update(ctx context.Context, ID string, name *string, email *string, password *string, role *auth.UserRole, isActive *bool) (*models.User, error)
 	Delete(ctx context.Context, id string) error
@@ -63,8 +63,8 @@ func (s userService) Register(ctx context.Context, name string, email string, pa
 	return user, nil
 }
 
-func (s userService) GetAll(ctx context.Context) ([]models.User, error) {
-	users, err := s.repo.FindAll(ctx)
+func (s userService) GetAll(ctx context.Context, filter models.UserFilter) ([]models.User, error) {
+	users, err := s.repo.FindAll(ctx, filter)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"task-manager/internal/auth"
+	"task-manager/internal/filters"
 	"task-manager/internal/service"
 	"time"
 )
@@ -92,7 +93,13 @@ func (h *UserHandler) Register(ctx *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /users/ [get]
 func (h *UserHandler) GetAll(ctx *gin.Context) {
-	users, err := h.service.GetAll(ctx.Request.Context())
+	filter, err := filters.ApplyUserFilter(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	users, err := h.service.GetAll(ctx.Request.Context(), filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in getAll"})
 		return

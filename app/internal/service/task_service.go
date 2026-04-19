@@ -72,6 +72,8 @@ func (s *taskService) GetByID(ctx context.Context, id string) (*models.Task, err
 	if err != nil {
 		return nil, err
 	}
+
+	s.enrichTaskWithUsers(ctx, task, map[string]*models.UserBrief{})
 	return task, nil
 }
 
@@ -84,11 +86,17 @@ func (s *taskService) GetByProjectID(ctx context.Context, projectID string) ([]m
 		return nil, myerrors.EntityNotFound("project")
 	}
 
-	task, err := s.repo.GetByProject(ctx, project)
+	tasks, err := s.repo.GetByProject(ctx, project)
 	if err != nil {
 		return nil, err
 	}
-	return task, nil
+
+	userCache := map[string]*models.UserBrief{}
+	for i := range tasks {
+		s.enrichTaskWithUsers(ctx, &tasks[i], userCache)
+	}
+
+	return tasks, nil
 }
 
 func (s *taskService) Update(ctx context.Context, identity *auth.Identity, id string, name *string, content *string, executiveID *string, auditorID *string) error {
@@ -188,4 +196,39 @@ func (s *taskService) Delete(ctx context.Context, id string) error {
 	}
 
 	return s.repo.Delete(ctx, task)
+}
+
+func (s *taskService) enrichTaskWithUsers(ctx context.Context, task *models.Task, userCache map[string]*models.UserBrief) {
+	if task == nil {
+		return
+	}
+
+	task.ExecutiveUser = s.getUserBriefByID(ctx, task.ExecutiveID, userCache)
+	task.AuditorUser = s.getUserBriefByID(ctx, task.AuditorID, userCache)
+	task.CreatedByUser = s.getUserBriefByID(ctx, task.CreatedBy, userCache)
+	task.UpdatedByUser = s.getUserBriefByID(ctx, task.UpdatedBy, userCache)
+}
+
+func (s *taskService) getUserBriefByID(ctx context.Context, userID string, userCache map[string]*models.UserBrief) *models.UserBrief {
+	if userID == "" {
+		return nil
+	}
+
+	if cached, ok := userCache[userID]; ok {
+		return cached
+	}
+
+	user, err := s.userService.GetById(ctx, userID)
+	if err != nil || user == nil {
+		userCache[userID] = nil
+		return nil
+	}
+
+	brief := &models.UserBrief{
+		ID:   user.ID,
+		Name: user.Name,
+	}
+	userCache[userID] = brief
+
+	return brief
 }

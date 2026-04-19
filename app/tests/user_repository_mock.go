@@ -25,8 +25,8 @@ func (m *MockUserRepository) FindUserByEmail(ctx context.Context, email string) 
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockUserRepository) FindAll(ctx context.Context) ([]models.User, error) {
-	args := m.Called(ctx)
+func (m *MockUserRepository) FindAll(ctx context.Context, filter models.UserFilter) ([]models.User, error) {
+	args := m.Called(ctx, filter)
 	return args.Get(0).([]models.User), args.Error(1)
 }
 

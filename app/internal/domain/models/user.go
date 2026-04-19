@@ -1,6 +1,7 @@
 package models
 
 import (
+	"gorm.io/gorm"
 	"task-manager/internal/auth"
 	"time"
 )
@@ -14,4 +15,13 @@ type User struct {
 	IsActive  bool          `gorm:"not null;default:true" json:"is_active"`
 	CreatedAt time.Time     `json:"created_at"`
 	UpdatedAt time.Time     `json:"updated_at"`
+}
+
+type UserBrief struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type UserFilter interface {
+	Apply(db *gorm.DB) (*gorm.DB, error)
 }

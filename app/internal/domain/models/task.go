@@ -14,6 +14,11 @@ type Task struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	Status      TaskStatus `gorm:"size:50;not null" json:"status"`
+
+	ExecutiveUser *UserBrief `gorm:"-" json:"executive_user,omitempty"`
+	AuditorUser   *UserBrief `gorm:"-" json:"auditor_user,omitempty"`
+	CreatedByUser *UserBrief `gorm:"-" json:"created_by_user,omitempty"`
+	UpdatedByUser *UserBrief `gorm:"-" json:"updated_by_user,omitempty"`
 }
 
 type TaskStatus string

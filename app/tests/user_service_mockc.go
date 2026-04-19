@@ -22,8 +22,8 @@ func (m *MockUserService) Register(ctx context.Context, name string, email strin
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockUserService) GetAll(ctx context.Context) ([]models.User, error) {
-	args := m.Called(ctx)
+func (m *MockUserService) GetAll(ctx context.Context, filter models.UserFilter) ([]models.User, error) {
+	args := m.Called(ctx, filter)
 	return args.Get(0).([]models.User), args.Error(1)
 }
 

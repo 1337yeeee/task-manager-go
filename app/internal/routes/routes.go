@@ -43,14 +43,19 @@ func registerProtectedRoutes(api *gin.RouterGroup, container *app.Container) {
 	protected.Use(middleware.JWTAccessMiddleware(container.TokenManager, container.UserRepository))
 
 	// Users
-	users := protected.Group("/users")
-	users.Use(middleware.RequireRole("admin"))
+	usersRead := protected.Group("/users")
+	usersRead.Use(middleware.RequireRolesModerators())
 	{
-		users.GET("", userHandler.GetAll)
-		users.GET("/:id", userHandler.GetByID)
-		users.PUT("/:id", userHandler.Update)
-		users.DELETE("/:id", userHandler.Delete)
-		users.POST("", userHandler.Register)
+		usersRead.GET("", userHandler.GetAll)
+	}
+
+	usersAdmin := protected.Group("/users")
+	usersAdmin.Use(middleware.RequireRole("admin"))
+	{
+		usersAdmin.GET("/:id", userHandler.GetByID)
+		usersAdmin.PUT("/:id", userHandler.Update)
+		usersAdmin.DELETE("/:id", userHandler.Delete)
+		usersAdmin.POST("", userHandler.Register)
 	}
 
 	// Projects

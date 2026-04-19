@@ -10,7 +10,7 @@ type UserRepository interface {
 	CreateUser(context.Context, *models.User) error
 	FindUserByID(context.Context, string) (*models.User, error)
 	FindUserByEmail(context.Context, string) (*models.User, error)
-	FindAll(context.Context) ([]models.User, error)
+	FindAll(context.Context, models.UserFilter) ([]models.User, error)
 	Update(context.Context, *models.User) (*models.User, error)
 	Delete(context.Context, string) error
 }
@@ -45,12 +45,21 @@ func (r *userRepository) FindUserByEmail(ctx context.Context, email string) (*mo
 	return user, nil
 }
 
-func (r *userRepository) FindAll(ctx context.Context) ([]models.User, error) {
+func (r *userRepository) FindAll(ctx context.Context, filter models.UserFilter) ([]models.User, error) {
 	var users []models.User
-	err := r.db.WithContext(ctx).Find(&users).Error
+
+	db := r.db.WithContext(ctx).Debug()
+
+	var err error
+	db, err = filter.Apply(db)
 	if err != nil {
 		return nil, err
 	}
+
+	if err := db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+
 	return users, nil
 }
 
