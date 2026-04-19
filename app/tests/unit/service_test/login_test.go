@@ -26,6 +26,7 @@ func TestAuthService_Login_Success(t *testing.T) {
 		Email:    "test@test.com",
 		Password: hash,
 		Role:     auth.UserRole("admin"),
+		IsActive: true,
 	}
 
 	userRepo.On("FindUserByEmail", mock.Anything, user.Email).
@@ -64,6 +65,7 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 		Email:    "test@test.com",
 		Password: hash,
 		Role:     auth.UserRole("admin"),
+		IsActive: true,
 	}
 
 	userRepo.On("FindUserByEmail", mock.Anything, user.Email).

@@ -55,7 +55,11 @@ func (r *userRepository) FindAll(ctx context.Context) ([]models.User, error) {
 }
 
 func (r *userRepository) Update(ctx context.Context, user *models.User) (*models.User, error) {
-	err := r.db.WithContext(ctx).Model(user).Updates(user).Error
+	err := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Where("id = ?", user.ID).
+		Select("name", "email", "password", "role", "is_active", "updated_at").
+		Updates(user).Error
 	if err != nil {
 		return nil, err
 	}

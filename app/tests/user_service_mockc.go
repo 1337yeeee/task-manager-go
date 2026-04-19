@@ -32,8 +32,8 @@ func (m *MockUserService) GetById(ctx context.Context, id string) (*models.User,
 	return args.Get(0).(*models.User), args.Error(1)
 }
 
-func (m *MockUserService) Update(ctx context.Context, ID string, name *string, email *string, password *string) (*models.User, error) {
-	args := m.Called(ctx, ID, name, email, password)
+func (m *MockUserService) Update(ctx context.Context, ID string, name *string, email *string, password *string, role *auth.UserRole, isActive *bool) (*models.User, error) {
+	args := m.Called(ctx, ID, name, email, password, role, isActive)
 	return args.Get(0).(*models.User), args.Error(1)
 }
 

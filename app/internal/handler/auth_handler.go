@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"task-manager/internal/auth"
 	"task-manager/internal/middleware"
+	"task-manager/internal/myerrors"
 	"task-manager/internal/responses"
 	"task-manager/internal/service"
 	"task-manager/internal/utils"
@@ -63,6 +65,11 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 
 	access, refresh, role, err := h.service.Login(ctx.Request.Context(), req.Email, req.Password)
 	if err != nil {
+		var forbiddenErr myerrors.ForbiddenActionError
+		if errors.As(err, &forbiddenErr) {
+			ctx.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
 		responses.InvalidCredentials(ctx)
 		return
 	}
@@ -98,6 +105,12 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 
 	access, refresh, role, err := h.service.RefreshToken(ctx, identity, refreshToken)
 	if err != nil {
+		var forbiddenErr myerrors.ForbiddenActionError
+		if errors.As(err, &forbiddenErr) {
+			ctx.JSON(http.StatusForbidden, ErrorResponse{Error: err.Error()})
+			return
+		}
+
 		ctx.JSON(http.StatusUnauthorized, ErrorResponse{Error: err.Error()})
 		return
 	}

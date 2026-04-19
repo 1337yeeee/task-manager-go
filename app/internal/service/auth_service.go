@@ -42,6 +42,10 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 		return "", "", "", myerrors.InvalidCredentials()
 	}
 
+	if !user.IsActive {
+		return "", "", "", myerrors.ForbiddenAction("user is inactive")
+	}
+
 	accessToken, refreshToken, err := s.generateTokens(user.ID, user.Role)
 	if err != nil {
 		log.Println("error generating tokens in authService.Login: ", err)
@@ -58,6 +62,14 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 }
 
 func (s *authService) RefreshToken(ctx context.Context, identity *auth.Identity, token string) (string, string, auth.UserRole, error) {
+	user, err := s.userRepository.FindUserByID(ctx, identity.UserID)
+	if err != nil {
+		return "", "", "", myerrors.InvalidCredentials()
+	}
+	if !user.IsActive {
+		return "", "", "", myerrors.ForbiddenAction("user is inactive")
+	}
+
 	storedToken, err := s.authRepository.GetByUserID(ctx, identity.UserID)
 	if err != nil {
 		log.Println("error getting stored refresh token", err)
@@ -69,7 +81,7 @@ func (s *authService) RefreshToken(ctx context.Context, identity *auth.Identity,
 		return "", "", "", myerrors.InvalidCredentials()
 	}
 
-	accessToken, refreshToken, err := s.generateTokens(identity.UserID, identity.Role)
+	accessToken, refreshToken, err := s.generateTokens(identity.UserID, user.Role)
 	if err != nil {
 		return "", "", "", myerrors.CouldNotCreateToken()
 	}
@@ -80,7 +92,7 @@ func (s *authService) RefreshToken(ctx context.Context, identity *auth.Identity,
 		return "", "", "", myerrors.CouldNotCreateToken()
 	}
 
-	return accessToken, refreshToken, identity.Role, nil
+	return accessToken, refreshToken, user.Role, nil
 }
 
 func (s *authService) Logout(ctx context.Context, identity *auth.Identity) error {

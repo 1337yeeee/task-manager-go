@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"task-manager/internal/auth"
 	"task-manager/internal/domain/models"
 	"task-manager/internal/domain/repository"
@@ -14,7 +15,7 @@ type UserService interface {
 	Register(ctx context.Context, name string, email string, password string, role *auth.UserRole) (*models.User, error)
 	GetAll(ctx context.Context) ([]models.User, error)
 	GetById(ctx context.Context, id string) (*models.User, error)
-	Update(ctx context.Context, ID string, name *string, email *string, password *string) (*models.User, error)
+	Update(ctx context.Context, ID string, name *string, email *string, password *string, role *auth.UserRole, isActive *bool) (*models.User, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -47,6 +48,7 @@ func (s userService) Register(ctx context.Context, name string, email string, pa
 		Email:    email,
 		Password: passwordHash,
 		Role:     *role,
+		IsActive: true,
 	}
 
 	err = s.repo.CreateUser(ctx, user)
@@ -77,7 +79,7 @@ func (s userService) GetById(ctx context.Context, id string) (*models.User, erro
 	return user, nil
 }
 
-func (s userService) Update(ctx context.Context, ID string, name *string, email *string, password *string) (*models.User, error) {
+func (s userService) Update(ctx context.Context, ID string, name *string, email *string, password *string, role *auth.UserRole, isActive *bool) (*models.User, error) {
 	user, err := s.repo.FindUserByID(ctx, ID)
 	if err != nil {
 		return nil, err
@@ -92,6 +94,16 @@ func (s userService) Update(ctx context.Context, ID string, name *string, email 
 
 	if email != nil && user.Email != *email {
 		user.Email = *email
+		changed = true
+	}
+
+	if role != nil && role.IsValid() && user.Role != *role {
+		user.Role = *role
+		changed = true
+	}
+
+	if isActive != nil && user.IsActive != *isActive {
+		user.IsActive = *isActive
 		changed = true
 	}
 
@@ -114,6 +126,9 @@ func (s userService) Update(ctx context.Context, ID string, name *string, email 
 			return nil, err
 		}
 	}
+
+	log.Println(user)
+
 	return user, nil
 }
 

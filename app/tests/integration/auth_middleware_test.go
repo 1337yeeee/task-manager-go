@@ -4,27 +4,41 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"task-manager/internal/domain/models"
 	"task-manager/internal/myerrors"
+	"task-manager/tests"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"task-manager/internal/auth"
 	"task-manager/internal/middleware"
 )
 
+func buildActiveUserRepo(identity *auth.Identity) *tests.MockUserRepository {
+	userRepo := &tests.MockUserRepository{}
+	userRepo.On("FindUserByID", mock.Anything, identity.UserID).Return(&models.User{
+		ID:       identity.UserID,
+		Role:     identity.Role,
+		IsActive: true,
+	}, nil)
+	return userRepo
+}
+
 // Тест 1: Успешная аутентификация с валидным токеном
 func TestJWTAuthMiddleware_Success(t *testing.T) {
 	r, tokenManager, identity := setupAuthTest()
+	userRepo := buildActiveUserRepo(identity)
 
 	// Создаем тестовый токен
 	token, err := tokenManager.GenerateAccessToken(identity.UserID, identity.Role)
 	require.NoError(t, err)
 
 	// Защищенный эндпоинт
-	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager, userRepo), func(c *gin.Context) {
 		ctxIdentity := auth.FromContext(c.Request.Context())
 		assert.NotNil(t, ctxIdentity)
 		assert.Equal(t, identity.UserID, ctxIdentity.UserID)
@@ -49,9 +63,10 @@ func TestJWTAuthMiddleware_Success(t *testing.T) {
 
 // Тест 2: Отсутствует заголовок Authorization
 func TestJWTAuthMiddleware_MissingHeader(t *testing.T) {
-	r, tokenManager, _ := setupAuthTest()
+	r, tokenManager, identity := setupAuthTest()
+	userRepo := buildActiveUserRepo(identity)
 
-	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager, userRepo), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
@@ -71,9 +86,10 @@ func TestJWTAuthMiddleware_MissingHeader(t *testing.T) {
 
 // Тест 3: Неправильный формат заголовка
 func TestJWTAuthMiddleware_InvalidHeaderFormat(t *testing.T) {
-	r, tokenManager, _ := setupAuthTest()
+	r, tokenManager, identity := setupAuthTest()
+	userRepo := buildActiveUserRepo(identity)
 
-	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager, userRepo), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
@@ -93,9 +109,10 @@ func TestJWTAuthMiddleware_InvalidHeaderFormat(t *testing.T) {
 
 // Тест 4: Невалидный токен
 func TestJWTAuthMiddleware_InvalidToken(t *testing.T) {
-	r, tokenManager, _ := setupAuthTest()
+	r, tokenManager, identity := setupAuthTest()
+	userRepo := buildActiveUserRepo(identity)
 
-	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager), func(c *gin.Context) {
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager, userRepo), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
@@ -117,13 +134,14 @@ func TestJWTAuthMiddleware_InvalidToken(t *testing.T) {
 func TestRequireRole_Success(t *testing.T) {
 	r, tokenManager, identity := setupAuthTest()
 	identity.Role = auth.UserRoleAdmin
+	userRepo := buildActiveUserRepo(identity)
 
 	token, err := tokenManager.GenerateAccessToken(identity.UserID, identity.Role)
 	require.NoError(t, err)
 
 	// Эндпоинт только для админов
 	r.GET("/admin",
-		middleware.JWTAccessMiddleware(tokenManager),
+		middleware.JWTAccessMiddleware(tokenManager, userRepo),
 		middleware.RequireRole(auth.UserRoleAdmin),
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "admin access granted"})
@@ -143,13 +161,14 @@ func TestRequireRole_Success(t *testing.T) {
 func TestRequireRole_Fail(t *testing.T) {
 	r, tokenManager, identity := setupAuthTest()
 	identity.Role = auth.UserRoleViewer
+	userRepo := buildActiveUserRepo(identity)
 
 	token, err := tokenManager.GenerateAccessToken(identity.UserID, identity.Role)
 	require.NoError(t, err)
 
 	// Эндпоинт только для админов
 	r.GET("/admin",
-		middleware.JWTAccessMiddleware(tokenManager),
+		middleware.JWTAccessMiddleware(tokenManager, userRepo),
 		middleware.RequireRole(auth.UserRoleAdmin),
 		func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "admin access granted"})
@@ -193,13 +212,14 @@ func TestRequireRolesModerators(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r, tokenManager, identity := setupAuthTest()
 			identity.Role = tc.userRole
+			userRepo := buildActiveUserRepo(identity)
 
 			token, err := tokenManager.GenerateAccessToken(identity.UserID, identity.Role)
 			require.NoError(t, err)
 
 			// Используем исправленную версию middleware
 			r.GET("/moderator-area",
-				middleware.JWTAccessMiddleware(tokenManager),
+				middleware.JWTAccessMiddleware(tokenManager, userRepo),
 				middleware.RequireRolesModerators(), // используем исправленную версию
 				func(c *gin.Context) {
 					c.JSON(http.StatusOK, gin.H{"message": "access granted"})

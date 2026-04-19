@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"task-manager/internal/domain/repository"
 	"task-manager/internal/myerrors"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,7 @@ import (
 	"task-manager/internal/utils"
 )
 
-func JWTAccessMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
+func JWTAccessMiddleware(tokenManager utils.TokenManager, userRepo repository.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log.Println("JWTAccessMiddleware")
 		tokenStr, err := extractAccessToken(c)
@@ -28,6 +29,17 @@ func JWTAccessMiddleware(tokenManager utils.TokenManager) gin.HandlerFunc {
 				"error": "invalid access token",
 			})
 			log.Println("invalid access token", err)
+			return
+		}
+
+		user, err := userRepo.FindUserByID(c.Request.Context(), claims.UserID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			return
+		}
+
+		if !user.IsActive {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "user is inactive"})
 			return
 		}
 

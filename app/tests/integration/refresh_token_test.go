@@ -30,9 +30,12 @@ func TestRefreshToken_Success(t *testing.T) {
 		ID:       identity.UserID,
 		Email:    UserEmail,
 		Password: userPasswordHash,
+		Role:     identity.Role,
+		IsActive: true,
 	}
 
 	userRepoMock.On("FindUserByEmail", mock.Anything, UserEmail).Return(user, nil)
+	userRepoMock.On("FindUserByID", mock.Anything, identity.UserID).Return(user, nil)
 	authRepoMock.On("Store", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 
@@ -93,6 +96,8 @@ func TestRefreshToken_Fail_AccessTokenProvided(t *testing.T) {
 		ID:       identity.UserID,
 		Email:    UserEmail,
 		Password: userPasswordHash,
+		Role:     identity.Role,
+		IsActive: true,
 	}
 
 	userRepoMock.On("FindUserByEmail", mock.Anything, UserEmail).Return(user, nil)

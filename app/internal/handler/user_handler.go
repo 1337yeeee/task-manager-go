@@ -20,14 +20,16 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 type registerUserRequest struct {
 	Name     string         `json:"name" binding:"required" example:"John Doe"`
 	Email    string         `json:"email" binding:"required,email" example:"john@example.com"`
-	Password string         `json:"password" binding:"required" example:"strongpassword123"`
+	Password string         `json:"password" binding:"required,min=8" example:"strongpassword123"`
 	Role     *auth.UserRole `json:"role" binding:"omitempty" swaggertype:"string" example:"viewer"`
 }
 
 type updateUserRequest struct {
-	Name     *string `json:"name" binding:"omitempty" example:"John Smith"`
-	Email    *string `json:"email" binding:"omitempty,email" example:"john.smith@example.com"`
-	Password *string `json:"password" binding:"omitempty" example:"newstrongpassword123"`
+	Name     *string        `json:"name" binding:"omitempty" example:"John Smith"`
+	Email    *string        `json:"email" binding:"omitempty,email" example:"john.smith@example.com"`
+	Password *string        `json:"password" binding:"omitempty,min=8" example:"newstrongpassword123"`
+	Role     *auth.UserRole `json:"role" binding:"omitempty" swaggertype:"string" example:"editor"`
+	IsActive *bool          `json:"is_active" binding:"omitempty" example:"true"`
 }
 
 type UserResponse struct {
@@ -35,6 +37,7 @@ type UserResponse struct {
 	Name      string    `json:"name" example:"John Doe"`
 	Email     string    `json:"email" example:"john@example.com"`
 	Role      string    `json:"role" example:"viewer" enums:"admin,viewer,editor"`
+	IsActive  bool      `json:"is_active" example:"true"`
 	CreatedAt time.Time `json:"created_at" example:"2026-04-02T12:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2026-04-02T12:30:00Z"`
 }
@@ -139,9 +142,20 @@ func (h *UserHandler) Update(ctx *gin.Context) {
 		return
 	}
 
+	identity := auth.FromContext(ctx.Request.Context())
+	if identity == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if identity.Role != auth.UserRoleAdmin {
+		req.Role = (*auth.UserRole)(nil)
+		req.IsActive = (*bool)(nil)
+	}
+
 	id := ctx.Param("id")
 
-	user, err := h.service.Update(ctx.Request.Context(), id, req.Name, req.Email, req.Password)
+	user, err := h.service.Update(ctx.Request.Context(), id, req.Name, req.Email, req.Password, req.Role, req.IsActive)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "error in update"})
 		return
