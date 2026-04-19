@@ -36,6 +36,30 @@ function getTasksFromResponse(response) {
     return [];
 }
 
+function getProjectIdFromUrl() {
+    const normalizedPath = window.location.pathname.replace(/^\/+|\/+$/g, "");
+    if (!normalizedPath) {
+        return null;
+    }
+
+    const pathParts = normalizedPath.split("/");
+    return pathParts.length === 1 ? decodeURIComponent(pathParts[0]) : null;
+}
+
+function updateProjectUrl(projectId, shouldReplace) {
+    const nextPath = "/" + encodeURIComponent(projectId);
+    if (window.location.pathname === nextPath) {
+        return;
+    }
+
+    if (shouldReplace) {
+        window.history.replaceState({}, "", nextPath);
+        return;
+    }
+
+    window.history.pushState({}, "", nextPath);
+}
+
 function updateTaskStatus(task) {
     apiRequest("PATCH", `api/tasks/${task.id}/status`, {"status": task.status})
         .done(function() {
@@ -52,10 +76,11 @@ function renderProjectList() {
 
     state.projects.forEach(p => {
         const active = p.id === state.currentProjectId ? "active" : "";
+        const href = "/" + encodeURIComponent(p.id);
 
         list.append(`
             <li class="project ${active}" data-id="${p.id}">
-                ${p.name}
+                <a class="project-link" href="${href}">${p.name}</a>
             </li>
         `);
     });
@@ -74,11 +99,17 @@ function renderProjectHeader() {
     $(".desc-header p").text(activeProject.description || "");
 }
 
-function setActiveProject(projectId) {
+function setActiveProject(projectId, options) {
+    const settings = options || {};
+
     state.currentProjectId = projectId;
     renderProjectList();
     renderProjectHeader();
     renderTasks(projectId);
+
+    if (settings.syncUrl) {
+        updateProjectUrl(projectId, settings.replaceUrl === true);
+    }
 }
 
 /* =========================
@@ -98,14 +129,14 @@ function renderProjects() {
                 return;
             }
 
-            const hasActiveProject = state.projects.some(p => p.id === state.currentProjectId);
-            if (!hasActiveProject) {
-                state.currentProjectId = state.projects[0].id;
+            const projectIdFromUrl = getProjectIdFromUrl();
+            const projectFromUrl = state.projects.find(p => p.id === projectIdFromUrl);
+            if (projectFromUrl) {
+                setActiveProject(projectFromUrl.id, { syncUrl: false });
+                return;
             }
 
-            renderProjectList();
-            renderProjectHeader();
-            renderTasks(state.currentProjectId);
+            setActiveProject(state.projects[0].id, { syncUrl: true, replaceUrl: true });
         })
         .fail(function(err) {
             console.error("Failed to load projects", err);
@@ -184,9 +215,10 @@ function renderTasks(projectId) {
    PROJECTS
 ========================= */
 
-$(".project-list").on("click", ".project", function () {
-    const projectId = String($(this).data("id"));
-    setActiveProject(projectId);
+$(".project-list").on("click", ".project-link", function (event) {
+    event.preventDefault();
+    const projectId = String($(this).closest(".project").data("id"));
+    setActiveProject(projectId, { syncUrl: true, replaceUrl: false });
 });
 
 /* =========================
@@ -232,7 +264,7 @@ $("#saveProjectBtn").click(function () {
 
         state.projects.unshift(createdProject);
         closeCreateProjectModal();
-        setActiveProject(createdProject.id);
+        setActiveProject(createdProject.id, { syncUrl: true, replaceUrl: false });
     }).fail(function(err) {
         console.error("Failed to create project", err);
         $("#createProjectError").text(err.message)
@@ -402,6 +434,22 @@ $(document).on("keydown", function (event) {
         closeCreateProjectModal();
         closeCreateTaskModal();
     }
+});
+
+$(window).on("popstate", function () {
+    if (!state.projects.length) {
+        return;
+    }
+
+    const projectIdFromUrl = getProjectIdFromUrl();
+    const projectFromUrl = state.projects.find(p => p.id === projectIdFromUrl);
+
+    if (projectFromUrl) {
+        setActiveProject(projectFromUrl.id, { syncUrl: false });
+        return;
+    }
+
+    setActiveProject(state.projects[0].id, { syncUrl: true, replaceUrl: true });
 });
 
 /* =========================
