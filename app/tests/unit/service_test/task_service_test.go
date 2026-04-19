@@ -584,6 +584,84 @@ func TestTaskUpdateStatus_WrongStatus(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
+func TestTaskUpdateStatus_ViewerForbidden(t *testing.T) {
+	repo := new(tests.MockTaskRepository)
+	projectService := new(tests.MockProjectService)
+	userService := new(tests.MockUserService)
+
+	const taskID = "task-id"
+
+	task := &models.Task{
+		ID:     taskID,
+		Status: models.TaskStatusCreated,
+	}
+
+	viewerIdentity := auth.NewIdentity("viewer-id", auth.UserRoleViewer)
+
+	repo.On("GetByID", mock.Anything, taskID).Return(task, nil).Once()
+
+	taskService := service.NewTaskService(repo, projectService, userService)
+	err := taskService.UpdateStatus(context.Background(), viewerIdentity, taskID, models.TaskStatusDone.String())
+
+	assert.Error(t, err)
+	assert.Equal(t, "viewer cannot update task", err.Error())
+	assert.Equal(t, models.TaskStatusCreated, task.Status)
+	repo.AssertNotCalled(t, "Update", mock.Anything, mock.Anything)
+	repo.AssertExpectations(t)
+}
+
+func TestTaskUpdateStatus_EditorCannotMoveFromDone(t *testing.T) {
+	repo := new(tests.MockTaskRepository)
+	projectService := new(tests.MockProjectService)
+	userService := new(tests.MockUserService)
+
+	const taskID = "task-id"
+
+	task := &models.Task{
+		ID:     taskID,
+		Status: models.TaskStatusDone,
+	}
+
+	editorIdentity := auth.NewIdentity("editor-id", auth.UserRoleEditor)
+
+	repo.On("GetByID", mock.Anything, taskID).Return(task, nil).Once()
+
+	taskService := service.NewTaskService(repo, projectService, userService)
+	err := taskService.UpdateStatus(context.Background(), editorIdentity, taskID, models.TaskStatusInProgress.String())
+
+	assert.Error(t, err)
+	assert.Equal(t, "editor cannot change status of done task", err.Error())
+	assert.Equal(t, models.TaskStatusDone, task.Status)
+	repo.AssertNotCalled(t, "Update", mock.Anything, mock.Anything)
+	repo.AssertExpectations(t)
+}
+
+func TestTaskUpdateStatus_EditorCanMoveToDone(t *testing.T) {
+	repo := new(tests.MockTaskRepository)
+	projectService := new(tests.MockProjectService)
+	userService := new(tests.MockUserService)
+
+	const taskID = "task-id"
+
+	task := &models.Task{
+		ID:     taskID,
+		Status: models.TaskStatusAudit,
+	}
+
+	editorIdentity := auth.NewIdentity("editor-id", auth.UserRoleEditor)
+
+	repo.On("GetByID", mock.Anything, taskID).Return(task, nil).Once()
+	repo.On("Update", mock.Anything, mock.AnythingOfType("*models.Task")).Return(nil).Once()
+
+	taskService := service.NewTaskService(repo, projectService, userService)
+	err := taskService.UpdateStatus(context.Background(), editorIdentity, taskID, models.TaskStatusDone.String())
+
+	assert.NoError(t, err)
+	assert.Equal(t, models.TaskStatusDone, task.Status)
+	assert.Equal(t, editorIdentity.UserID, task.UpdatedBy)
+	repo.AssertExpectations(t)
+}
+
 func TestTaskUpdateStatus_TaskNotFound(t *testing.T) {
 	repo := new(tests.MockTaskRepository)
 	projectService := new(tests.MockProjectService)

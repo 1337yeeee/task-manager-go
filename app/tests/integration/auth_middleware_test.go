@@ -28,6 +28,16 @@ func buildActiveUserRepo(identity *auth.Identity) *tests.MockUserRepository {
 	return userRepo
 }
 
+func buildInactiveUserRepo(identity *auth.Identity) *tests.MockUserRepository {
+	userRepo := &tests.MockUserRepository{}
+	userRepo.On("FindUserByID", mock.Anything, identity.UserID).Return(&models.User{
+		ID:       identity.UserID,
+		Role:     identity.Role,
+		IsActive: false,
+	}, nil)
+	return userRepo
+}
+
 // Тест 1: Успешная аутентификация с валидным токеном
 func TestJWTAuthMiddleware_Success(t *testing.T) {
 	r, tokenManager, identity := setupAuthTest()
@@ -128,6 +138,31 @@ func TestJWTAuthMiddleware_InvalidToken(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Contains(t, response["error"], "invalid access token")
+}
+
+func TestJWTAuthMiddleware_InactiveUser(t *testing.T) {
+	r, tokenManager, identity := setupAuthTest()
+	userRepo := buildInactiveUserRepo(identity)
+
+	token, err := tokenManager.GenerateAccessToken(identity.UserID, identity.Role)
+	require.NoError(t, err)
+
+	r.GET("/protected", middleware.JWTAccessMiddleware(tokenManager, userRepo), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
+	})
+
+	req, _ := http.NewRequest("GET", "/protected", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+
+	var response map[string]string
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user is inactive", response["error"])
 }
 
 // Тест 5: Успешная авторизация с правильной ролью
